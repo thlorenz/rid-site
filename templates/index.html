@@ -43,6 +43,66 @@
 <section class="section section-sm">
   <div class="container">
     <div class="row justify-content-center text-center">
+
+<!-- 
+   Start Code Sections
+-->
+      <div class="col-lg-8">
+        <h2 class="h4" style="margin: 0; padding: 0;">Rust</h2>
+        <pre style="margin: 0;">
+          <code class="language-rust" data-lang="rust" style="text-align: left !important;"><span style="color:#b48ead;">pub struct </span><span style="color:#c0c5ce;">Todo {
+  </span><span style="color:#bf616a;">title</span><span style="color:#c0c5ce;">: String
+}
+
+#[</span><span style="color:#bf616a;">rid</span><span style="color:#c0c5ce;">::</span><span style="color:#bf616a;">model</span><span style="color:#c0c5ce;">]
+#[</span><span style="color:#bf616a;">rid</span><span style="color:#c0c5ce;">::</span><span style="color:#bf616a;">structs</span><span style="color:#c0c5ce;">(Todo)]
+</span><span style="color:#b48ead;">pub struct </span><span style="color:#c0c5ce;">Model {
+    </span><span style="color:#bf616a;">todos</span><span style="color:#c0c5ce;">: Vec&lt;Todo&gt;,
+}
+
+#[</span><span style="color:#bf616a;">rid</span><span style="color:#c0c5ce;">::</span><span style="color:#bf616a;">export</span><span style="color:#c0c5ce;">]
+</span><span style="color:#b48ead;">impl </span><span style="color:#c0c5ce;">Model {
+    #[</span><span style="color:#bf616a;">rid</span><span style="color:#c0c5ce;">::</span><span style="color:#bf616a;">export</span><span style="color:#c0c5ce;">(initModel)]
+    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">new</span><span style="color:#c0c5ce;">() -&gt; </span><span style="color:#b48ead;">Self </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> todos = vec![Todo { title: "</span><span style="color:#a3be8c;">Have fun with Rid</span><span style="color:#c0c5ce;">".</span><span style="color:#96b5b4;">to_string</span><span style="color:#c0c5ce;">() }]; 
+        </span><span style="color:#b48ead;">Self </span><span style="color:#c0c5ce;">{ todos }
+    }
+}</span>
+          </code>
+        </pre>
+      </div>
+        <div class="col-lg-8">
+        <h2 class="h4" style="margin: 0; padding: 0;">Flutter</h2>
+        <pre style="margin: 0;">
+            <code class="language-dart" data-lang="dart" style="text-align: left !important;"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() {
+  </span><b style="font-size: 1.0em;"><span style="color:#b48ead;">final</span><span style="color:#c0c5ce;"> model = rid_ffi.</span><span style="color:#8fa1b3;">initModel</span><span style="color:#c0c5ce;">();
+  </span></b><span style="color:#8fa1b3;">runApp</span><span style="color:#c0c5ce;">(</span><span style="color:#ebcb8b;">TodoApp</span><span style="color:#c0c5ce;">(model));
+}
+</span><span style="color:#65737e;">// [ .. ]
+</span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">TodosView </span><span style="color:#b48ead;">extends </span><span style="color:#ebcb8b;">StatelessWidget</span><span style="color:#c0c5ce;"> {
+  </span><b style="font-size: 1.0em;"><span style="color:#b48ead;">final </span><span style="color:#ebcb8b;">Pointer</span><span style="color:#c0c5ce;">&lt;</span><span style="color:#ebcb8b;">Model</span><span style="color:#c0c5ce;">&gt; model;
+  </span></b><span style="color:#ebcb8b;">TodosView</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">this</span><span style="color:#c0c5ce;">.model, {</span><span style="color:#ebcb8b;">Key</span><span style="color:#c0c5ce;">? key}) : </span><span style="color:#bf616a;">super</span><span style="color:#c0c5ce;">(key: key);
+
+  </span><span style="color:#b48ead;">@override
+  </span><span style="color:#ebcb8b;">Widget </span><span style="color:#8fa1b3;">build</span><span style="color:#c0c5ce;">(</span><span style="color:#ebcb8b;">BuildContext</span><span style="color:#c0c5ce;"> context) {
+    </span><b style="font-size: 1.1em;"><span style="color:#b48ead;">final</span><span style="color:#c0c5ce;"> todos = model.todos;
+    </span></b><span style="color:#b48ead;">return </span><span style="color:#ebcb8b;">Center</span><span style="color:#c0c5ce;">(
+      child: </span><span style="color:#ebcb8b;">ListView</span><span style="color:#c0c5ce;">.</span><span style="color:#8fa1b3;">builder</span><span style="color:#c0c5ce;">(
+      itemCount: todos.length,
+      itemBuilder: (_, index) =&gt; </span><span style="color:#ebcb8b;">Text</span><span style="color:#c0c5ce;">(</span><span style="color:#a3be8c;">'${</span><span style="color:#bf616a;">todos[index].title</span><span style="color:#a3be8c;">}'</span><span style="color:#c0c5ce;">),
+    ));
+  }
+}</span></code>
+          </pre>
+        </div>
+
+<!-- 
+    End Code Sections
+-->
+
+<!-- 
+   Start Feature Sections
+-->
       <div class="col-lg-5">
         <h2 class="h4">Approachable</h2>
         <p>Interface from Flutter to Rust without writing complex and error prone FFI boilerplate.</p>
@@ -55,6 +115,11 @@
         <h2 class="h4">Quick UI Iteration</h2>
         <p>Benefit from Flutter's hot reload feature while creating the UI of your application.</p>
       </div>
+
+<!-- 
+   End Feature Sections
+-->
+
     </div>
   </div>
 </section>
