@@ -142,9 +142,13 @@ weight = 20
 
 [extra.home]
 title = "<em>R</em>ust <em>I</em>ntegrated <em>D</em>art"
-lead = "Call Rust code from your Dart or Flutter app simply by annotating it."
+lead = "Integrate Rust into your Dart or Flutter app simply by annotating it."
 url = "/docs/getting-started/introduction/"
-url_button = "Get started"
+start_button = "Get started"
+
+access_button = "Early Access"
+access_url = "/docs/contributing/sponsor/"
+todo_app_url = "/docs/examples/flutter-todo-app/"
 repo_version = "GitHub v0.1.0"
 repo_license = "Open-source MIT License."
 repo_url = "https://github.com/thlorenz/rid-site"

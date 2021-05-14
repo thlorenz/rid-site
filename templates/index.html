@@ -32,7 +32,19 @@
         </div>
         <div class="col-lg-9 col-xl-8 text-center">
           <p class="lead">{{ config.extra.home.lead | safe }}</p>
-          <a class="btn btn-primary btn-lg px-4 mb-2" href="{{ get_url(path=config.extra.home.url | default(value="/")) | safe }}" role="button">{{ config.extra.home.url_button | default(value="Get started") }}</a>
+          <a 
+            class="btn btn-primary btn-lg px-4 mb-2" 
+            href="{{ get_url(path=config.extra.home.url) | safe }}" 
+            role="button">
+              {{ config.extra.home.start_button }}
+          </a>
+          <a 
+            class="btn btn-secondary btn-lg px-4 mb-2" 
+            href="{{ get_url(path=config.extra.home.access_url) | safe }}" 
+            role="button">
+              {{ config.extra.home.access_button }}
+          </a>
+          <p><strong>News:<strong> I'll build the <a href="{{ get_url(path=config.extra.home.todo_app_url) }}">Todo App</a> live on <a href="https://www.twitch.tv/thlorenz">twitch</a> on <em>Sat, May 15 2021, 10-12pm</em> EST</p>
           <!-- <p class="meta">{{ config.extra.home.repo_license | default(value="MIT")}} <a href="{{ config.extra.home.repo_url | default(value="https://github.com/thlorenz/rid") | safe }}">{{ config.extra.home.repo_version | default(value="0.1.0") }}</a></p> -->
         </div>
       </div>
