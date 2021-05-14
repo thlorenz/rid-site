@@ -9,12 +9,11 @@ sort_by = "weight"
 template = "docs/page.html"
 
 [extra]
-lead = "Help to evolve and maintain Rid via a monthly donation."
 toc = true
 top = false
 +++
 
-_Rid_ is _[Sponsorware](https://calebporzio.com/sponsorware)_ and thus not open sourced yet. 
+_Rid_ is _[Sponsorware](https://github.com/sponsorware/docs)_ and thus not open sourced yet. 
 
 You [can sponsor me](https://github.com/sponsors/thlorenz) via a monthly contribution and
 **gain immediate access** to the currently private [_rid_](https://github.com/thlorenz/rid)

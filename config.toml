@@ -127,7 +127,7 @@ info = "Powered by <a href=\"https://www.getzola.org/\">Zola</a>, and <a href=\"
 
 [[extra.footer.nav]]
 name = "Sponsor"
-url = "https://github.com/sponsors/thlorenz"
+url = "/docs/contributing/sponsor/"
 weight = 20
 
 [[extra.footer.nav]]
