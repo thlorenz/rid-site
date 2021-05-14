@@ -34,6 +34,7 @@ include_description = false
 # Whether to include the rendered content of the page/section in the index
 include_content = true
 
+
 [markdown]
 highlight_code = true
 # highlight_theme = "solarized"
@@ -78,7 +79,7 @@ library = "katex"  # options: "katex", "mathjax". default is "katex".
 [extra.open]
 enable = true
 # this image will be used as fallback if a page has no image of its own
-image = "doks.png"
+image = "rid-card.png"
 twitter_site = "thlorenz"
 twitter_creator = "thlorenz"
 og_locale = "en_US"
