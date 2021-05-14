@@ -9,8 +9,19 @@ sort_by = "weight"
 template = "docs/page.html"
 +++
 
+**Watch me build it [live on twitch](https://www.twitch.tv/thlorenz)** on _Saturday, May 15
+2021, 10-12pm_ EST
+
 ![img](../flutter-todo.png)
 
-Please read the [source and quick
-walkthrough](https://github.com/thlorenz/rid-examples/tree/master/flutter/todo) of this example as
-part of the [rid examples repo](https://github.com/thlorenz/rid-examples).
+👉 Read the [source](https://github.com/thlorenz/rid-examples/tree/master/flutter/todo) of this example
+as part of the [rid examples repo](https://github.com/thlorenz/rid-examples).
+
+👉 [Get started with _Rid_](../../getting-started/introduction/) and [learn about its
+architecture](../../getting-started/architecture/).
+
+## Walkthrough
+
+Make sure to check back for step by step instructions on how to build this application.
+
+[Sponsors](../../contributing/sponsor/) get early access.
