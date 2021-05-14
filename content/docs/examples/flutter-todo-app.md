@@ -9,8 +9,7 @@ sort_by = "weight"
 template = "docs/page.html"
 +++
 
-**Watch me build it [live on twitch](https://www.twitch.tv/thlorenz)** on _Saturday, May 15
-2021, 10-12pm_ EST
+**Watch me build it [live on twitch](https://www.twitch.tv/thlorenz)** on _Saturday, May 15 2021, 10pm_ EDT
 
 ![img](../flutter-todo.png)
 
