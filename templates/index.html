@@ -75,24 +75,25 @@
         <h2 class="h4" style="margin: 0; padding: 0;">Flutter</h2>
         <pre style="margin: 0;">
             <code class="language-dart" data-lang="dart" style="text-align: left !important;"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() {
-  </span><b style="font-size: 1.0em;"><span style="color:#b48ead;">final</span><span style="color:#c0c5ce;"> model = rid_ffi.</span><span style="color:#8fa1b3;">initModel</span><span style="color:#c0c5ce;">();
-  </span></b><span style="color:#8fa1b3;">runApp</span><span style="color:#c0c5ce;">(</span><span style="color:#ebcb8b;">TodoApp</span><span style="color:#c0c5ce;">(model));
+</span><span style="background-color:#65737e30;color:#c0c5ce;">  </span><span style="background-color:#65737e30;color:#b48ead;">final</span><span style="background-color:#65737e30;color:#c0c5ce;"> model = rid_ffi.</span><span style="background-color:#65737e30;color:#8fa1b3;">initModel</span><span style="background-color:#65737e30;color:#c0c5ce;">();
+</span><span style="color:#c0c5ce;">  </span><span style="color:#8fa1b3;">runApp</span><span style="color:#c0c5ce;">(</span><span style="color:#ebcb8b;">TodoApp</span><span style="color:#c0c5ce;">(model));
 }
 </span><span style="color:#65737e;">// [ .. ]
 </span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">TodosView </span><span style="color:#b48ead;">extends </span><span style="color:#ebcb8b;">StatelessWidget</span><span style="color:#c0c5ce;"> {
-  </span><b style="font-size: 1.0em;"><span style="color:#b48ead;">final </span><span style="color:#ebcb8b;">Pointer</span><span style="color:#c0c5ce;">&lt;</span><span style="color:#ebcb8b;">Model</span><span style="color:#c0c5ce;">&gt; model;
-  </span></b><span style="color:#ebcb8b;">TodosView</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">this</span><span style="color:#c0c5ce;">.model, {</span><span style="color:#ebcb8b;">Key</span><span style="color:#c0c5ce;">? key}) : </span><span style="color:#bf616a;">super</span><span style="color:#c0c5ce;">(key: key);
+</span><span style="background-color:#65737e30;color:#c0c5ce;">  </span><span style="background-color:#65737e30;color:#b48ead;">final </span><span style="background-color:#65737e30;color:#ebcb8b;">Pointer</span><span style="background-color:#65737e30;color:#c0c5ce;">&lt;</span><span style="background-color:#65737e30;color:#ebcb8b;">Model</span><span style="background-color:#65737e30;color:#c0c5ce;">&gt; model;
+</span><span style="color:#c0c5ce;">  </span><span style="color:#ebcb8b;">TodosView</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">this</span><span style="color:#c0c5ce;">.model, {</span><span style="color:#ebcb8b;">Key</span><span style="color:#c0c5ce;">? key}) : </span><span style="color:#bf616a;">super</span><span style="color:#c0c5ce;">(key: key);
 
   </span><span style="color:#b48ead;">@override
   </span><span style="color:#ebcb8b;">Widget </span><span style="color:#8fa1b3;">build</span><span style="color:#c0c5ce;">(</span><span style="color:#ebcb8b;">BuildContext</span><span style="color:#c0c5ce;"> context) {
-    </span><b style="font-size: 1.1em;"><span style="color:#b48ead;">final</span><span style="color:#c0c5ce;"> todos = model.todos;
-    </span></b><span style="color:#b48ead;">return </span><span style="color:#ebcb8b;">Center</span><span style="color:#c0c5ce;">(
+</span><span style="background-color:#65737e30;color:#c0c5ce;">    </span><span style="background-color:#65737e30;color:#b48ead;">final</span><span style="background-color:#65737e30;color:#c0c5ce;"> todos = model.todos;
+</span><span style="color:#c0c5ce;">    </span><span style="color:#b48ead;">return </span><span style="color:#ebcb8b;">Center</span><span style="color:#c0c5ce;">(
       child: </span><span style="color:#ebcb8b;">ListView</span><span style="color:#c0c5ce;">.</span><span style="color:#8fa1b3;">builder</span><span style="color:#c0c5ce;">(
-      itemCount: todos.length,
-      itemBuilder: (_, index) =&gt; </span><span style="color:#ebcb8b;">Text</span><span style="color:#c0c5ce;">(</span><span style="color:#a3be8c;">'${</span><span style="color:#bf616a;">todos[index].title</span><span style="color:#a3be8c;">}'</span><span style="color:#c0c5ce;">),
-    ));
+</span><span style="background-color:#65737e30;color:#c0c5ce;">      itemCount: todos.length,
+      itemBuilder: (_, index) =&gt; </span><span style="background-color:#65737e30;color:#ebcb8b;">Text</span><span style="background-color:#65737e30;color:#c0c5ce;">(</span><span style="background-color:#65737e30;color:#a3be8c;">'${</span><span style="background-color:#65737e30;color:#bf616a;">todos[index].title</span><span style="background-color:#65737e30;color:#a3be8c;">}'</span><span style="background-color:#65737e30;color:#c0c5ce;">),
+</span><span style="color:#c0c5ce;">    ));
   }
-}</span></code>
+}
+</span></code>
           </pre>
         </div>
 
