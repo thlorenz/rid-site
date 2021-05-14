@@ -6,4 +6,14 @@
   <script src="{{ get_url(path="search_index." ~ config.default_language ~ ".js") | safe }}" defer></script>
   <script src="{{ get_url(path="js/search.js") | safe }}" defer></script>
 {% endif %}
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6N055MM49B"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-6N055MM49B');
+</script>
+
 {% endmacro %}
