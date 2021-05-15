@@ -18,7 +18,7 @@ top = false
 
 Each application created with Rid is divided into two major parts. 
 
-The UI, implemented in Flutter/Dart, concerns itself only with rendering _Widgets_ and user
+The UI implemented in Flutter/Dart concerns itself only with rendering _Widgets_ and user
 interaction. It delegates to Rust for all application logic.
 
 The application state is held by Rust. Application logic mutating that state is implemented in
@@ -32,17 +32,22 @@ interaction. Rust then modifies the state of the application.
 
 All logic needed to derive the new state from the previous one as a result of a user
 interaction is implemented in Rust. Flutter only consumes this state and when needed
-transforms it slightly and only locally to make it presentable via a _Widget_.
+transforms it slightly and only locally in order to make it presentable via a _Widget_.
 
 Flutter should never modify the global application state directly.
 
 ### Model and Message
 
-The main model _struct_ of your application holds all its state. It can reference other model
-_structs_ however it should be the only one receiving messages.
+The main model [_struct_](https://doc.rust-lang.org/std/keyword.struct.html) of your application holds all the application's state. This main model
+can reference other model _structs_.
 
-The message type is defined via an enum. It is used to send messages to the model and should be
-the only means of mutating it.
+The message is defined via an [_enum_](https://doc.rust-lang.org/std/keyword.enum.html). It is used to send messages to the model and should be
+the only means of mutating it. The variants of the message _enum_ can have associated data
+which is used to pass a message payload from Dart (see `Msg::Add(u32)` below).
+
+In general your application will have **one** _main model struct_ which receives **one** message
+type. Aside from that you can have as many _model_ or other _structs_ and _enums_ as
+you like.
 
 **Example**
 
@@ -66,23 +71,19 @@ pub enum Msg {
     Inc,
     Add(u32),
 }
-
 ```
 
 As you can see the `#[rid::message(Model)]` attribute defines the `Model` as the `Msg`
-receiver. That model type needs to implement an update method `fn update(&mut self, msg: Msg)`
+receiver. That _model_ needs to implement an update method `fn update(&mut self, msg: Msg)`
 in order to handle incoming messages. 
-
-_Note_: we omitted the `rid::export` method to initialize the model from Flutter. This is
-explained in [rid::model](../../rid-attributes/model/)
 
 _See also_: [rid::message](../../rid-attributes/message/)
 
 ## Accessing State and Sending Messages 
 
-As mentioned, all state is held by Rust. It is exposed to Flutter via a _Getter_ based API. In
-order to improve performance state is only transfered once accessed, i.e. an item of a
-`Vec<u8>` are only passed once it is indexed into.
+As mentioned, all state is held by Rust. It is exposed to Flutter via a _Getter_ based API.
+State is only transfered once accessed in order to improve performance. An item of a
+`Vec<u8>` is only passed once it is accessed by indexing into the _collection_.
 
 Flutter sends messages in response to user interaction like a button click.
 
@@ -122,6 +123,9 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 ```
 
+_Note_: we omitted the `rid::export` of `initModel` in the Rust example for brevity. _See_
+[rid::model](../../rid-attributes/model/) for an explanation.
+
 ## How Data is Passed
 
 - primitives like `u8`, `i32` and C-style `enum`s are copied and passed _by value_
@@ -131,16 +135,16 @@ class _MyHomePageState extends State<MyHomePage> {
 - collections like `Vec` are passed _by reference_ and Rid exposes an _Iterable_ interface to
   provide access to each item
 
-### Iteratable Interface for Collections
+### Accessing and Iterating Collections
 
-_Rid_ provides access to the _pointer_ of a collection via a convenient _iterable_ interface to
-the developer.
+_Rid_ wraps the retrieved _pointer_ of a _collection_ in an API that exposes a convenient
+_iterable_ interface as well as an indexing operator.
 
 Have a look at the below list of `todos` defined on the `model`.
 
 ```rust
 #[rid::model]
-#[Debug, rid::Debug]
+#[derive(Debug, rid::Debug)]
 pub struct Todo {
     title: String
 }
@@ -152,12 +156,12 @@ pub struct Model {
 }
 ```
 
-_Note_: that we derive `#[Debug, rid::Debug]` for the `Todo` to call it from Flutter via
-`todo.debug([pretty])`, see [rid::debug](../../rid-attributes/debug/).
+_Note_: that we `#[derive(Debug, rid::Debug)]` for the `Todo` in order to call it from Flutter
+via `todo.debug([pretty])`, see [rid::debug](../../rid-attributes/debug/).
 
 Those `todos` can be used on the Flutter end like any _Iterable_.
 
-```dart
+```dart, hl_lines = 3 7 11 16
 queryTodos(Pointer<Model> model) {
   final todos = model.todos;
   final total = todos.length;

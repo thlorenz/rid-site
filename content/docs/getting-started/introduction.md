@@ -16,7 +16,7 @@ top = false
 
 ## Quick Start
 
-Please have a look at the below snippets to get an idea about how _Rid_ helps you integrate
+Please have a look at the below snippets to get an idea of how _Rid_ helps you integrate
 your Flutter/Dart UI with your application logic implemented in Rust. Then continue by reading
 about the [Rid Appliation Architecture →](../architecture/)
 
@@ -43,7 +43,7 @@ impl Model {
 ```
 
 **Dart**
-```dart
+```dart 
 final model = rid_ffi.initModel();
 for (final todo in model.todos.iter()) {
     print("${todo.title}");
@@ -51,14 +51,14 @@ for (final todo in model.todos.iter()) {
 ```
 
 **Flutter**
-```dart
+```dart, hl_lines = 5 8 9 
 class TodosView extends StatelessWidget {
   // [ .. ]
   @override
   Widget build(BuildContext context) {
     final todos = model.todos;
     return Center(
-        child: ListView.builder(
+      child: ListView.builder(
       itemCount: todos.length,
       itemBuilder: (_, index) => Text('${todos[index].title}'),
     ));
