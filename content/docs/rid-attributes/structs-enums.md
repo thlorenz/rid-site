@@ -14,6 +14,10 @@ toc = true
 top = false
 +++
 
+The glue code that _rid_ generates for `struct`s is different from `enum`s. Therefore for
+non-builtin types we need to let it know which it is dealing with.
+
 ## TODO
 
-Explain `#[rid::structs]` and `#[rid::enums]` in detail.
+Explain `#[rid::structs]` and `#[rid::enums]` in more detail.
+
