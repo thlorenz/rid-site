@@ -9,8 +9,6 @@ sort_by = "weight"
 template = "docs/page.html"
 +++
 
-**Watch me build it [live on twitch](https://www.twitch.tv/thlorenz)** on _Saturday, May 15 2021, 10pm_ EDT
-
 ![img](../flutter-todo.png)
 
 👉 Read the [source](https://github.com/thlorenz/rid-examples/tree/master/flutter/todo) of this example
@@ -18,6 +16,10 @@ as part of the [rid examples repo](https://github.com/thlorenz/rid-examples).
 
 👉 [Get started with _Rid_](../../getting-started/introduction/) and [learn about its
 architecture](../../getting-started/architecture/).
+
+## Screencast
+
+<iframe width="690" height="388" src="https://www.youtube.com/embed/Rs3_N4maNPw" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Walkthrough
 
