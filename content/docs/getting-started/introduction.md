@@ -18,7 +18,7 @@ top = false
 
 Please have a look at the below snippets to get an idea of how _Rid_ helps you integrate
 your Flutter/Dart UI with your application logic implemented in Rust. Then continue by reading
-about the [Rid Appliation Architecture →](../architecture/)
+about the [Rid Application Architecture →](../architecture/)
 
 **Rust**
 ```rust
