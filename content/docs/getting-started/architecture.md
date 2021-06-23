@@ -21,14 +21,16 @@ Each application created with Rid is divided into two major parts.
 The UI implemented in Flutter/Dart concerns itself only with rendering _Widgets_ and user
 interaction. It delegates to Rust for all application logic.
 
-The application state is held by Rust. Application logic mutating that state is implemented in
+All application state is held by Rust. Application logic mutating that state is implemented in
 Rust.
 
 ## Rust State and Logic Implementation
 
-Your application will typically have one main model which holds the application state. This
+A _rid_ application has one main model, the _Store_, which holds the application state. This
 state is not modified from the UI. Instead the UI sends messages to Rust in order to relay user
-interaction. Rust then modifies the state of the application.
+interaction. Rust then modifies the state of the application and responds with a _Reply_ in
+order to communicate that the message has been handled. At that point the UI can query the
+state of the _Store_ and update itself.
 
 All logic needed to derive the new state from the previous one as a result of a user
 interaction is implemented in Rust. Flutter only consumes this state and when needed
@@ -36,62 +38,98 @@ transforms it slightly and only locally in order to make it presentable via a _W
 
 Flutter should never modify the global application state directly.
 
-### Model and Message
+### Store, Message and Reply
 
-The main model [_struct_](https://doc.rust-lang.org/std/keyword.struct.html) of your application holds all the application's state. This main model
-can reference other model _structs_.
+The _Store_ [_struct_](https://doc.rust-lang.org/std/keyword.struct.html) of your application
+holds all the application's state. The _Store_ can reference other model _structs_.
 
-The message is defined via an [_enum_](https://doc.rust-lang.org/std/keyword.enum.html). It is used to send messages to the model and should be
+Rid assumes that all _Messages_ may be handled asynchronously and thus will never make the
+assumption that the state of the _Store_ was modified in response to it after the `update`
+method completes.
+
+Instead it uses a _Request/Reply_ mechanism to allow signaling that the state of the _Store_
+was completely updated in response to a _Message_.
+
+The _Message_ is defined via an [_enum_](https://doc.rust-lang.org/std/keyword.enum.html). It is used to send messages to the model and should be
 the only means of mutating it. The variants of the message _enum_ can have associated data
 which is used to pass a message payload from Dart (see `Msg::Add(u32)` below).
 
-In general your application will have **one** _main model struct_ which receives **one** message
-type. Aside from that you can have as many _model_ or other _structs_ and _enums_ as
-you like.
+The _Message_ enum is associated with a _Reply_ enum which is used to respond to messages after
+they are handled.
 
 **Example**
 
 ```rust
-#[rid::model]
-pub struct Model {
+#[rid::store]
+pub struct Store {
     count: u32,
 }
 
-impl Model {
-    fn update(&mut self, msg: Msg) {
+impl rid::RidStore<Msg> for Store {
+    fn create() -> Self {
+        Self { count: 0 }
+    }
+
+    fn update(&mut self, req_id: u64, msg: Msg) {
         match msg {
-            Msg::Inc => self.count += 1,
-            Msg::Add(n) => self.count += n,
+            Msg::Inc => {
+                self.count += 1;
+                rid::post(Reply::Increased(req_id));
+            }
+            Msg::Add(n) => {
+                self.count += n;
+                rid::post(Reply::Added(req_id, n.to_string()));
+            }
         }
     }
 }
 
-#[rid::message(Model)]
+#[rid::message(Reply)]
+#[derive(Debug, Clone)]
 pub enum Msg {
     Inc,
     Add(u32),
 }
+
+#[rid::reply]
+#[derive(Clone)]
+pub enum Reply {
+    Increased(u64),
+    Added(u64, String),
+}
 ```
 
-As you can see the `#[rid::message(Model)]` attribute defines the `Model` as the `Msg`
-receiver. That _model_ needs to implement an update method `fn update(&mut self, msg: Msg)`
-in order to handle incoming messages. 
+As you can see the `#[rid::message(Reply)]` attribute defines the type of the _Reply_ used to
+respond to _Messages_.
 
-_See also_: [rid::message](../../rid-attributes/message/)
+👉 read more about [rid::message and rid::reply](../../rid-attributes/message-reply/)
 
 ## Accessing State and Sending Messages 
 
 As mentioned, all state is held by Rust. It is exposed to Flutter via a _Getter_ based API.
-State is only transfered once accessed in order to improve performance. An item of a
-`Vec<u8>` is only passed once it is accessed by indexing into the _collection_.
+State is only transfered once accessed in order to improve performance. To make things easier
+the recommended API converts all data to Dart instances to avoid memory races and access
+issues. 
 
-Flutter sends messages in response to user interaction like a button click.
+TODO: link separate document of higher level API details
 
-In order to interact with the above Rust model from Flutter we could do the following. 
+For cases where more control is required and the performance suffers, i.e. when sending huge
+lists of items, a lower level API is provided as well. As an example when using that API an item of a
+`Vec<u8>` is only passed once it is accessed by indexing into the _collection_. However the
+developer is now responsible to properly _lock_ the _Store_ to ensure that this vector wasn't
+mutated in the meantime.
 
-```dart, hl_lines=2 12 20 24
+TODO: link separate document of raw API details
+
+In response to user interaction like a button click we send messages to Rust in order to cause
+the _Store_ to be updated.
+
+Using the recommended higher level API to interact with the above Rust _Store_ from Flutter we
+could do the following. 
+
+```dart, hl_lines=2 12 21 27
 class _MyHomePageState extends State<MyHomePage> {
-  final model = rid_ffi.initModel();
+  final store = Store.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('You have counted to:'),
-            Text('${model.count}'),
+            Text('${store.count}'),
           ],
         ),
       ),
@@ -109,11 +147,15 @@ class _MyHomePageState extends State<MyHomePage> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
-            onPressed: () => setState(() { model.msgAdd(10); }),
+            onPressed: () => { 
+              store.msgAdd(10).then((_) => setState(() {})); 
+            }),
             child: Icon(Icons.add),
           ),
           FloatingActionButton(
-            onPressed: () => setState(() { model.msgInc(); }),
+            onPressed: () => { 
+              store.msgInc(10).then((_) => setState(() {})); 
+            }),
             child: Icon(Icons.add),
           ),
         ],
@@ -123,10 +165,12 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 ```
 
-_Note_: we omitted the `rid::export` of `initModel` in the Rust example for brevity. _See_
-[rid::model](../../rid-attributes/model/) for an explanation.
+## Rid's Raw Api
 
-## How Data is Passed
+TODO: This is a quick summary of the _raw_ rid API. It will be moved into its own doc shortly and a
+doc for the _recommended_ higher level rid API will be provided alongside it.
+
+### How Data is Passed
 
 - primitives like `u8`, `i32` and C-style `enum`s are copied and passed _by value_
 - strings like `String`, `&str` are passed _by reference_, but Rid immediately releases them after

@@ -30,16 +30,16 @@ generating the FFI glue code.
 
 I am adding features to _rid_ by building example applications and filling in what's needed.
 
-### Async Support
+### ✅ Async Support 
 
 I'm planning on building the following two applications next:
 
 - Todo app using bloc state management
 - reddit ticker which updates vote count of a post in real time
 
-Both will require to communicate state changes from Rust asynchronously.
+Both require to communicate state changes from Rust asynchronously which are now supported.
 
-### Rid CLI Tool 
+### ⌛ Rid CLI Tool 
 
 At this point _rid_ apps are created via a template which includes scripts to generate glue
 code and build for different devices. They rely on the `rid-build` crate.
@@ -49,13 +49,13 @@ I will create a CLI tool which will have numerous features aiding in the develop
 - **scaffold command**: to create a ready to run and work on Dart or Flutter application
 - **build command**: which will create glue code and build binaries for each device 
 
-## Stability
+## ⌛ Stability
 
 _Rid_ is evolving very fast and has some gaps in the implementation. Even though most of them
 will be addressed by necessity when a new example app depends on it, I want to take some time
 to meticulously go through the code base and address most of them.
 
-### Wasm Support
+### ⌛ Wasm Support
 
 _Rid_ will support all platforms that Flutter supports. Therefore it is essential that it can
 compile to wasm and generate the necessary glue code.

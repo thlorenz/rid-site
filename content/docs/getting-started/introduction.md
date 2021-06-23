@@ -22,41 +22,72 @@ about the [Rid Appliation Architecture →](../architecture/)
 
 **Rust**
 ```rust
-pub struct Todo {
-  title: String
-}
-
-#[rid::model]
+#[rid::store]
 #[rid::structs(Todo)]
-pub struct Model {
+pub struct Store {
     todos: Vec<Todo>,
 }
 
-#[rid::export]
-impl Model {
-    #[rid::export(initModel)]
-    pub fn new() -> Self {
-        let todos = vec![Todo { title: "Have fun with Rid".to_string() }]; 
+impl rid::RidStore<Msg> for Store {
+     fn create() -> Self {
+        let todos = vec![Todo { title: "Learn Rust".to_string() }]; 
         Self { todos }
     }
+    
+    fn update(&mut self, req_id: u64, msg: Msg) {
+        match msg {
+            Msg::AddTodo(title) => {
+                self.todos.push(Todo { title });
+                rid::post(Reply::AddedTodo(req_id));
+            }
+        }
+    }
+}
+
+#[rid::message(Reply)]
+pub enum Msg {
+    AddTodo(String),
+}
+
+#[rid::reply]
+pub enum Reply {
+    AddedTodo(u64),
+}
+
+#[rid::model]
+pub struct Todo {
+  title: String
 }
 ```
 
+
+
+
 **Dart**
 ```dart 
-final model = rid_ffi.initModel();
-for (final todo in model.todos.iter()) {
+final store = Store.instance;
+
+await store.msgAddTodo('Learn Rid');
+
+for (final todo in store.todos) {
     print("${todo.title}");
 }
 ```
 
 **Flutter**
-```dart, hl_lines = 5 8 9 
+```dart, hl_lines = 2 7 12 15 16
+void main() {
+  final store = Store.instance;
+  runApp(TodoApp(model));
+}
+// [ .. ]
 class TodosView extends StatelessWidget {
-  // [ .. ]
+  final Store store;
+  TodosView(this.store, {Key? key}) : super(key: key);
+  
   @override
   Widget build(BuildContext context) {
-    final todos = model.todos;
+    final todos = store.todos;
     return Center(
       child: ListView.builder(
       itemCount: todos.length,
@@ -65,6 +96,9 @@ class TodosView extends StatelessWidget {
   }
 }
 ```
+
+👉   If you like to look at more detailed code samples head on over to the [rid-examples
+repository](https:://gitub.com/thlorenz/rid-examples).
 
 ## Get Involved 
 

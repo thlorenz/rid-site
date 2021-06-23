@@ -1,5 +1,5 @@
 +++
-title = "rid::structs, rid::enums"
+title = "rid::structs and rid::enums"
 description = "Explains the Rid structs and enums attributes."
 date = 2021-05-13
 updated = 2021-05-13
