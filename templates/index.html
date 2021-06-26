@@ -61,7 +61,7 @@
 -->
       <div class="col-lg-8">
         <h2 class="h4" style="margin: 0; padding: 0;">Rust</h2>
-        <pre style="margin: 0;">
+        <pre style="margin: 20px 0 0 0;">
 <code class="language-rust" data-lang="rust" style="text-align: left !important;"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">rid</span><span style="color:#c0c5ce;">::</span><span style="color:#bf616a;">store</span><span style="color:#c0c5ce;">]
 #[</span><span style="color:#bf616a;">rid</span><span style="color:#c0c5ce;">::</span><span style="color:#bf616a;">structs</span><span style="color:#c0c5ce;">(Todo)]
 </span><span style="color:#b48ead;">pub struct </span><span style="color:#c0c5ce;">Store {
@@ -72,7 +72,6 @@
      </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">create</span><span style="color:#c0c5ce;">() -&gt; </span><span style="color:#b48ead;">Self </span><span style="color:#c0c5ce;">{
         </span><span style="color:#b48ead;">Self </span><span style="color:#c0c5ce;">{ todos: vec![Todo { title: "</span><span style="color:#a3be8c;">Try Rid</span><span style="color:#c0c5ce;">".</span><span style="color:#96b5b4;">to_string</span><span style="color:#c0c5ce;">() }] }
     }
-    
     </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">update</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">req_id</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">u64</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">msg</span><span style="color:#c0c5ce;">: Msg) {
         </span><span style="color:#b48ead;">match</span><span style="color:#c0c5ce;"> msg {
             Msg::AddTodo(title) =&gt; {
@@ -81,14 +80,13 @@
             }
         }
     }
-}
-</span></code>
+}</span></code>
         </pre>
       </div>
         <div class="col-lg-8">
         <h2 class="h4" style="margin: 0; padding: 0;">Flutter</h2>
         <pre style="margin: 0;">
-  <code class="language-dart" data-lang="dart" style="text-align: left !important;"><span style="color:#b48ead;">pub struct </span><span style="color:#c0c5ce;">Todo {
+  <code class="language-dart" data-lang="dart" style="text-align: left !important;"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() {
 </span><span style="background-color:#65737e30;color:#c0c5ce;">  </span><span style="background-color:#65737e30;color:#b48ead;">final</span><span style="background-color:#65737e30;color:#c0c5ce;"> store = </span><span style="background-color:#65737e30;color:#ebcb8b;">Store</span><span style="background-color:#65737e30;color:#c0c5ce;">.instance;
 </span><span style="color:#c0c5ce;">  </span><span style="color:#8fa1b3;">runApp</span><span style="color:#c0c5ce;">(</span><span style="color:#ebcb8b;">TodoApp</span><span style="color:#c0c5ce;">(model));
 }
