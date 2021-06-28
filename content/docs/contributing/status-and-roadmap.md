@@ -39,6 +39,14 @@ I'm planning on building the following two applications next:
 
 Both require to communicate state changes from Rust asynchronously which are now supported.
 
+### 🔨👷 Wasm Support
+
+_Rid_ will support all platforms that Flutter supports. Therefore it is essential that it can
+compile to wasm and generate the necessary glue code.
+
+Even though it is a bit further down the _road_ I will get there as I know it is important to
+some of you and to myself as well.
+
 ### ⌛ Rid CLI Tool 
 
 At this point _rid_ apps are created via a template which includes scripts to generate glue
@@ -54,11 +62,3 @@ I will create a CLI tool which will have numerous features aiding in the develop
 _Rid_ is evolving very fast and has some gaps in the implementation. Even though most of them
 will be addressed by necessity when a new example app depends on it, I want to take some time
 to meticulously go through the code base and address most of them.
-
-### ⌛ Wasm Support
-
-_Rid_ will support all platforms that Flutter supports. Therefore it is essential that it can
-compile to wasm and generate the necessary glue code.
-
-Even though it is a bit further down the _road_ I will get there as I know it is important to
-some of you and to myself as well.
