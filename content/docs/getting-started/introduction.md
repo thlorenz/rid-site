@@ -98,7 +98,7 @@ class TodosView extends StatelessWidget {
 ```
 
 👉   If you like to look at more detailed code samples head on over to the [rid-examples
-repository](https:://gitub.com/thlorenz/rid-examples).
+repository](https://github.com/thlorenz/rid-examples).
 
 ## Get Involved 
 
