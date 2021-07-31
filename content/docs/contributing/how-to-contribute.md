@@ -27,7 +27,7 @@ top = false
 ### Create an issue
 
 - [Bug report](https://github.com/thlorenz/rid/issues/new)
-- [Feature request](https://github.com/aaranxu/rid/issues/new)
+- [Feature request](https://github.com/thlorenz/rid/issues/new)
 
 ## Improve documentation
 
