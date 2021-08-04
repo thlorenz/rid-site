@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;800&display=swap');
+
+body {
+  font-family: 'Inconsolata', monospace;
+}
+strong {
+  font-weight: 800;
+}
+blockquote {
+  font-style: italic;
+  font-size: 1.0em;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid silver;
+  padding: 5px;
+}
