@@ -39,13 +39,29 @@ I'm planning on building the following two applications next:
 
 Both require to communicate state changes from Rust asynchronously which are now supported.
 
+### 🔨👷 Support More Collection Types 
+
+This is an ongoing effort as they will be added on a per need basis. Most likely they will be
+added in the order below
+
+- [HashSet](https://doc.rust-lang.org/std/collections/hash_set/struct.HashSet.html)
+- [BTreeSet](https://doc.rust-lang.org/std/collections/struct.BTreeSet.html)
+- [HashMap](https://doc.rust-lang.org/std/collections/struct.HashMap.html) 
+- [BTreeMap](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) 
+
+Please note that supporting fields of a particular type on _model_ structs is a different task
+than supporing _export_ functions to return values of same type.
+
+The `Vec` type is currently supported for both cases.
+
 ### 🔨👷 Wasm Support
 
 _Rid_ will support all platforms that Flutter supports. Therefore it is essential that it can
 compile to wasm and generate the necessary glue code.
 
-Even though it is a bit further down the _road_ I will get there as I know it is important to
-some of you and to myself as well.
+I did have a first stab at this, and realized there are a lot of pieces missing still,
+especially on the Dart side. Therefore I put this off for a later time. For more information
+please refer to to [this post](../../../blog/wasm-support.md).
 
 ### ⌛ Rid CLI Tool 
 
