@@ -9,6 +9,9 @@ template = "blog/page.html"
 [taxonomies]
 authors = ["Thorsten Lorenz"]
 
+[extra]
+lead = "Exploring WASM support for Rid to build <b>Flutter/Dart</b> apps with <b>Rust</b> app logic running in the browser"
+
 +++
 
 When I demonstrated the initial Rid version I immediately got [requests to add WASM
