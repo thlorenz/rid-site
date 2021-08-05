@@ -105,6 +105,10 @@ necessary to send _Strings_ to Rust and optionally _dealloate_ and _reallocate_ 
 These _allocation_ functions needs to be implemented in Rust similarly to the [implementation
 included with the example](https://github.com/thlorenz/rid-examples/blob/master/flutter/todo_cubit_wasm/src/alloc.rs)
 
+<div class="card" style="background: white;">
+<iframe src="https://github.com/sponsors/thlorenz/card" title="Sponsor thlorenz" height="225" width="600" style="border: 0;"></iframe>
+</div>
+
 ## Challenges
 
 Some surprises awaited though when I tried to use all features of the application. 
