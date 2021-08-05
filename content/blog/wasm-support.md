@@ -188,7 +188,7 @@ well without any success, but at least I learned a bunch about compiling Dart ap
 debugging a Flutter app running in Chrome.
 
 In the end I decided to work around this issue by wrapping the above method in one that returns a
-JSON string containing the filtered Todos that is then deserializes on the Dart end.
+JSON string containing the filtered Todos that it then deserializes on the Dart end.
 
 To that end I used [serde](https://crates.io/crates/serde) to make the Todo struct serializable
 and [serde_json](https://crates.io/crates/serde_json) to output JSON.
@@ -218,4 +218,4 @@ Therefore it is a bit too early to properly add this feature to Rid and more eff
 other features that need to be added. In the meantime the ecosystem around WASM support will
 evolve and I will try to help where I can.
 
-👉 If you liked this post and want to help me evolve Rid, please consider [becoming a sponsor](https://github.com/sponsors/thlorenz)
+👉 If you liked this post and want to help me evolve Rid, please consider [becoming a sponsor](../../docs/contributing/sponsor)
