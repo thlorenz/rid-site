@@ -6,7 +6,3 @@ document.getElementById("mode").addEventListener("click", () => {
     document.body.classList.contains("dark") ? "dark" : "light"
   );
 });
-
-if (localStorage.getItem("theme") !== "light") {
-  document.body.classList.add("dark");
-}
