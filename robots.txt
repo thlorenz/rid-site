@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://thlorenz.com/rid-site/sitemap.xml

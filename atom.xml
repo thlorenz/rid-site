@@ -1,0 +1,902 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+	<title>Rid</title>
+	<link href="https://thlorenz.com/rid-site/atom.xml" rel="self" type="application/atom+xml"/>
+  <link href="https://thlorenz.com/rid-site"/>
+	<generator uri="https://www.getzola.org/">Zola</generator>
+	<updated>2021-08-04T00:00:00+00:00</updated>
+	<id>https://thlorenz.com/rid-site/atom.xml</id>
+	<entry xml:lang="en">
+		<title>Rid WASM Support Opus 1</title>
+		<published>2021-08-04T00:00:00+00:00</published>
+		<updated>2021-08-04T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/blog/wasm-support/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/blog/wasm-support/</id>
+		<content type="html">&lt;p&gt;When I demonstrated the initial Rid version I immediately got &lt;a href=&quot;https:&#x2F;&#x2F;www.reddit.com&#x2F;r&#x2F;rust&#x2F;comments&#x2F;ncc9vc&#x2F;rid_integrate_rust_into_your_dart_or_flutter_app&#x2F;gy4peh2?utm_source=share&amp;amp;utm_medium=web2x&amp;amp;context=3&quot;&gt;requests to add WASM
+support&lt;&#x2F;a&gt; so apps built with it can run in the browser as well.
+At this point I figured it would be as simple as adding another FFI shim, but this turned out
+to not be entirely true.&lt;&#x2F;p&gt;
+&lt;p&gt;As always I drove my explorations via an example, a Todo app using bloc&#x2F;cubit with all logic
+implemented in Rust. Feel free to click below, it&#x27;s not a screenshot, but a fully functioning
+app minus the feature requiring threading (more about that below).&lt;&#x2F;p&gt;
+&lt;div style=&quot;text-align: center; width=200px;&quot;&gt;
+&lt;h4 style=&quot;display: inline;&quot;&gt;Flutter app is loading ...&lt;&#x2F;h4&gt;
+&lt;iframe style=&quot;margin-top: -40px; margin-left: auto; margin-right: auto; &quot; src=&quot;https:&#x2F;&#x2F;thlorenz.com&#x2F;rid-examples&#x2F;todo_cubit&#x2F;&quot; width=&quot;400px&quot; height=&quot;400px&quot;&gt;&lt;&#x2F;iframe&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;&lt;em&gt;Yes it&#x27;s an interactive embedded Flutter app built with Rid, just click around&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;You can also try the &lt;a href=&quot;https:&#x2F;&#x2F;thlorenz.com&#x2F;rid-examples&#x2F;todo_cubit&quot;&gt;standalone version&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;standing-on-the-shoulders&quot;&gt;Standing On the Shoulders ...&lt;&#x2F;h2&gt;
+&lt;p&gt;Lots of projects stand on the shoulders of giants. This is true for Rid as well as it wouldn&#x27;t
+be possible or at the very least a lot harder without libraries like
+&lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;syn&quot;&gt;syn&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;pub.dev&#x2F;packages&#x2F;ffigen&quot;&gt;ffigen&lt;&#x2F;a&gt; just to name
+a few.&lt;&#x2F;p&gt;
+&lt;p&gt;Compiling Rust code to WASM was the easy part. The giants are pretty much built into the
+Rust compiler and tools to optimize the results for size and&#x2F;or speed are available as
+&lt;a href=&quot;https:&#x2F;&#x2F;rustwasm.github.io&#x2F;docs&#x2F;book&#x2F;game-of-life&#x2F;code-size.html&quot;&gt;explained in this chapter&lt;&#x2F;a&gt;
+of the &lt;a href=&quot;https:&#x2F;&#x2F;rustwasm.github.io&#x2F;docs&#x2F;book&#x2F;introduction.html&quot;&gt;&lt;em&gt;Rust and WebAssembly&lt;&#x2F;em&gt; book&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;However when it comes to loading and interacting with WASM from Dart there aren&#x27;t that many shoulders
+to stand on yet. There is the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;dart-lang&#x2F;wasm&quot;&gt;dart-lang&#x2F;wasm&lt;&#x2F;a&gt; library, but
+if you read the fine print closely&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Built on top of the Wasmer runtime&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;you&#x27;ll realize that it loads that runtime as a binary.
+Obviously that doesn&#x27;t work when running in the browser and being able to run in the browser is
+why we want to add WASM support to Rid in the first place.&lt;&#x2F;p&gt;
+&lt;p&gt;After spending too much time catching on to that 😜 I found
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lexaknyazev&#x2F;wasm.dart&#x2F;tree&#x2F;main&#x2F;wasm_interop&quot;&gt;wasm_interop&lt;&#x2F;a&gt;. This module
+uses browser APIs in order to load and interact with WASM modules. Just what I needed.&lt;&#x2F;p&gt;
+&lt;p&gt;Well almost, the gluecode that &lt;a href=&quot;https:&#x2F;&#x2F;pub.dev&#x2F;packages&#x2F;ffigen&quot;&gt;ffigen&lt;&#x2F;a&gt; generates won&#x27;t work
+for WASM because it depends on libraries that aren&#x27;t available when building Dart for the Web.
+For a moment I thought &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;EPNW&#x2F;web_ffi&quot;&gt;web_ffi&lt;&#x2F;a&gt; would help me here until I
+read&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Currently, only WebAssembly compiled with emscripten is usable&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;At that point I realized that Eric Seidel was right on the 💰 when he responded to my tweet
+in which I presented a small working example of a Dart + WASM web app.&lt;&#x2F;p&gt;
+&lt;blockquote class=&quot;twitter-tweet&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;Agreed! CC &lt;a href=&quot;https:&#x2F;&#x2F;twitter.com&#x2F;MiSvTh?ref_src=twsrc%5Etfw&quot;&gt;@MiSvTh&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;&amp;mdash; kevmoo (@kevmoo) &lt;a href=&quot;https:&#x2F;&#x2F;twitter.com&#x2F;kevmoo&#x2F;status&#x2F;1410439603010490374?ref_src=twsrc%5Etfw&quot;&gt;July 1, 2021&lt;&#x2F;a&gt;&lt;&#x2F;blockquote&gt; &lt;script async src=&quot;https:&#x2F;&#x2F;platform.twitter.com&#x2F;widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;&#x2F;script&gt;
+&lt;h2 id=&quot;the-missing-pieces&quot;&gt;The Missing Pieces&lt;&#x2F;h2&gt;
+&lt;p&gt;I decided to build the missing pieces myself, one of which would be a library like &lt;em&gt;ffigen&lt;&#x2F;em&gt;
+except that it generates code to interface with
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lexaknyazev&#x2F;wasm.dart&#x2F;tree&#x2F;main&#x2F;wasm_interop&quot;&gt;wasm_interop&lt;&#x2F;a&gt;. I called it
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;wasmjsgen&quot;&gt;&lt;em&gt;wasmjsgen&lt;&#x2F;em&gt;&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;One feature of this library is that the code that consumes those &lt;em&gt;ffi&lt;&#x2F;em&gt; calls
+does not have change when interfacing with WASM vs. &lt;em&gt;Native&lt;&#x2F;em&gt; bindings. Therefore all function
+signatures have to match and types need to at least have the same name. &lt;a href=&quot;https:&#x2F;&#x2F;medium.com&#x2F;@dvargahali&#x2F;dart-2-conditional-imports-update-16147a776aa8&quot;&gt;Conditional
+imports&lt;&#x2F;a&gt; can
+then be used to import the correct &lt;em&gt;ffi&lt;&#x2F;em&gt; bindings. In short &lt;strong&gt;the &lt;em&gt;wasmjsgen&lt;&#x2F;em&gt; API matches the
+&lt;em&gt;ffigen&lt;&#x2F;em&gt; API exactly&lt;&#x2F;strong&gt; down to &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid-examples&#x2F;blob&#x2F;master&#x2F;flutter&#x2F;todo_cubit_wasm&#x2F;plugin&#x2F;lib&#x2F;generated&#x2F;ffigen_binding.dart#L943-L953&quot;&gt;mimicking &lt;code&gt;Pointer&lt;&#x2F;code&gt; types&lt;&#x2F;a&gt;
+so that the wrapper code generated by Rid can be used across platforms.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;If you&#x27;re wondering why this library doesn&#x27;t wrap &lt;em&gt;ffigen&lt;&#x2F;em&gt; to change behavior via
+composition or inheritance please have a look at my failed attempts of &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;wasmjs_extend_ffigen&quot;&gt;extending
+ffigen&lt;&#x2F;a&gt; as well as
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;wasmjsgen_wrap_ffigen&quot;&gt;wrapping it&lt;&#x2F;a&gt;. 
+The fact that the data types storing parse results include the code generation methods directly
+made it impossible to get in the middle and change it to generate WASM bindings instead. At
+some point I gave up on the &lt;em&gt;correct&lt;&#x2F;em&gt; way of doing this and basically copy&#x2F;pasted the library to
+modify code generation directly.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Once I had &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;wasmjsgen&quot;&gt;wasmjsgen&lt;&#x2F;a&gt; in place I was able to create the
+glue code for the WASM version of the &lt;a href=&quot;http:&#x2F;&#x2F;todo&quot;&gt;todo cubit&lt;&#x2F;a&gt; example and only had to modify
+the Rid wrapper code slightly to have the example app running in the browser with practically
+no change to existing app code.&lt;&#x2F;p&gt;
+&lt;p&gt;The config of wasmjsgen is identicical to ffigen&#x27;s except for the &lt;em&gt;allocate&lt;&#x2F;em&gt; function that is
+necessary to send &lt;em&gt;Strings&lt;&#x2F;em&gt; to Rust and optionally &lt;em&gt;dealloate&lt;&#x2F;em&gt; and &lt;em&gt;reallocate&lt;&#x2F;em&gt; functions.&lt;&#x2F;p&gt;
+&lt;p&gt;These &lt;em&gt;allocation&lt;&#x2F;em&gt; functions needs to be implemented in Rust similarly to the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid-examples&#x2F;blob&#x2F;master&#x2F;flutter&#x2F;todo_cubit_wasm&#x2F;src&#x2F;alloc.rs&quot;&gt;implementation
+included with the example&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;div class=&quot;card&quot; style=&quot;background: white;&quot;&gt;
+&lt;iframe src=&quot;https:&#x2F;&#x2F;github.com&#x2F;sponsors&#x2F;thlorenz&#x2F;card&quot; title=&quot;Sponsor thlorenz&quot; height=&quot;225&quot; width=&quot;600&quot; style=&quot;border: 0;&quot;&gt;&lt;&#x2F;iframe&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;challenges&quot;&gt;Challenges&lt;&#x2F;h2&gt;
+&lt;p&gt;Some surprises awaited though when I tried to use all features of the application. &lt;&#x2F;p&gt;
+&lt;h3 id=&quot;no-reply-channel-with-wasm&quot;&gt;No Reply Channel with WASM&lt;&#x2F;h3&gt;
+&lt;p&gt;First off, the &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;allo-isolate&quot;&gt;allo_isolate&lt;&#x2F;a&gt; crate which Rid uses to
+relay messages from Rust to Dart does not work with WASM. I worked around this by using a
+polling implementation instead, i.e. the Dart end frequently queries the Rust end for any
+replies to messages it should to process. &lt;&#x2F;p&gt;
+&lt;p&gt;For now I created a custom reply channel implementation which &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid-examples&#x2F;blob&#x2F;master&#x2F;flutter&#x2F;todo_cubit_wasm&#x2F;plugin&#x2F;lib&#x2F;wasm&#x2F;reply_channel.dart#L29-L44&quot;&gt;uses a
+timer&lt;&#x2F;a&gt;
+on the Dart side. &lt;&#x2F;p&gt;
+&lt;p&gt;On the Rust side I used a simple data structure to queue up and expose replies. It&#x27;s using a
+&lt;code&gt;Vec&lt;&#x2F;code&gt; for simplicity since order doesn&#x27;t matter in this simple case. The code would be improved
+and generated by Rid of course. For now I &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid-examples&#x2F;blob&#x2F;master&#x2F;flutter&#x2F;todo_cubit_wasm&#x2F;src&#x2F;replies.rs&quot;&gt;added it to the
+example&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;no-threads-out-of-the-box&quot;&gt;No Threads out of the Box&lt;&#x2F;h3&gt;
+&lt;p&gt;When testing the Todo expiry feature the app crashed when attempting to create a thread on the
+Rust end since this is not supported when running WASM. Fortunately in this case the error
+message &lt;code&gt;&amp;quot;failed to spawn thread&amp;quot;&lt;&#x2F;code&gt; made it very easy to confirm the origin of the problem.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; std&#x2F;src&#x2F;thread&#x2F;mod.rs
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;spawn&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;lt;F, T&amp;gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: F) -&amp;gt; JoinHandle&amp;lt;T&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;where
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;    F: FnOnce() -&amp;gt; T,
+    F: Send + &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;&amp;#39;static&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    T: Send + &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;&amp;#39;static&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+{
+    Builder::new().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;spawn&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(f).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;expect&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;failed to spawn thread&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;)
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;After reading &lt;a href=&quot;https:&#x2F;&#x2F;rustwasm.github.io&#x2F;2018&#x2F;10&#x2F;24&#x2F;multithreading-rust-and-wasm.html&quot;&gt;this very informative
+post&lt;&#x2F;a&gt; about the state
+of multi-threading in rust-compiled WASM, I realized that while possible, making this work would
+require a considerable amount effort at this point. However there are lots of other features
+I&#x27;d like to add to Rid. I hope that  when I revisit this task the
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;w3reality&#x2F;wasm-mt&quot;&gt;wasm-mt&lt;&#x2F;a&gt; or similar libraries have paved the way to make
+this easier.&lt;&#x2F;p&gt;
+&lt;p&gt;For now I removed todo expiry from the WASM version of the sample app.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;issues-sending-structs&quot;&gt;Issues sending Structs&lt;&#x2F;h3&gt;
+&lt;p&gt;The Todo example app allows users to select a filter to show &lt;em&gt;All&lt;&#x2F;em&gt;, &lt;em&gt;Completed&lt;&#x2F;em&gt; or &lt;em&gt;Pending&lt;&#x2F;em&gt;
+Todos. After the filter is updated the Dart end invokes the below Rust method in order to get
+the Todos that match it.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;export&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;structs&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Todo)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;impl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Store {
+    #[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;export&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;filtered_todos&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) -&amp;gt; Vec&amp;lt;&amp;amp;Todo&amp;gt; {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; vec: Vec&amp;lt;&amp;amp;Todo&amp;gt; = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;match &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.filter {
+            Filter::Completed =&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.todos.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;iter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;filter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(|&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;x&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;| x.completed).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;collect&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(),
+            Filter::Pending =&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.todos.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;iter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;filter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(|&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;x&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;| !x.completed).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;collect&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(),
+            Filter::All =&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.todos.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;iter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;collect&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(),
+        };
+        vec.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;sort&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        vec
+    }
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The returned &lt;code&gt;Vec&lt;&#x2F;code&gt; is actually wrapped in a struct that includes &lt;code&gt;length&lt;&#x2F;code&gt; and &lt;code&gt;capacity&lt;&#x2F;code&gt;
+information as well as a pointer to the first item. It also includes a method to &lt;code&gt;free&lt;&#x2F;code&gt; it when
+the Dart end processed it.&lt;&#x2F;p&gt;
+&lt;p&gt;It turns out returning such a struct when using WASM is not trivial if even possible at all. At
+the very least, I could not get it to work at all and the error messages aren&#x27;t very helpful.
+It actually made me wonder if WASM provides any other error message than the below. 😎&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;RuntimeError: unreachable&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;I spent way too much time trying to make this work and tried returning other struct types as
+well without any success, but at least I learned a bunch about compiling Dart apps with
+&lt;a href=&quot;https:&#x2F;&#x2F;dart.dev&#x2F;tools&#x2F;dart2js&quot;&gt;dart2js&lt;&#x2F;a&gt; and how debugging a Dart Web app compares to
+debugging a Flutter app running in Chrome.&lt;&#x2F;p&gt;
+&lt;p&gt;In the end I decided to work around this issue by wrapping the above method in one that returns a
+JSON string containing the filtered Todos that it then deserializes on the Dart end.&lt;&#x2F;p&gt;
+&lt;p&gt;To that end I used &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;serde&quot;&gt;serde&lt;&#x2F;a&gt; to make the Todo struct serializable
+and &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;serde_json&quot;&gt;serde_json&lt;&#x2F;a&gt; to output JSON.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;export&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;impl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Store {
+    #[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;export&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;filtered_todos_string&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) -&amp;gt; String {
+        serde_json::to_string(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;filtered_todos&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;expect&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Unable JSON stringify filtred todos&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;)
+    }
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h1 id=&quot;in-closing&quot;&gt;In Closing&lt;&#x2F;h1&gt;
+&lt;p&gt;Exploring WASM support surfaced a few things:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Using Rid to build Flutter apps running in the browser will definitely be possible eventually&lt;&#x2F;li&gt;
+&lt;li&gt;The ecosystem to do so is missing a lot of pieces, especially on the Dart side&lt;&#x2F;li&gt;
+&lt;li&gt;Many of the limitations I encountered will be overcome when the ecosystem around WASM
+evolves&lt;&#x2F;li&gt;
+&lt;li&gt;All other limitations can be worked around at possible performance cost, i.e.
+serialize&#x2F;deserialize Data Structures&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;Therefore it is a bit too early to properly add this feature to Rid and more efficient to focus on
+other features that need to be added. In the meantime the ecosystem around WASM support will
+evolve and I will try to help where I can.&lt;&#x2F;p&gt;
+&lt;p&gt;👉 If you liked this post and want to help me evolve Rid, please consider &lt;a href=&quot;..&#x2F;..&#x2F;docs&#x2F;contributing&#x2F;sponsor&quot;&gt;becoming a sponsor&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>Status and Roadmap</title>
+		<published>2021-05-14T00:00:00+00:00</published>
+		<updated>2021-05-14T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/contributing/status-and-roadmap/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/contributing/status-and-roadmap/</id>
+		<content type="html">&lt;h2 id=&quot;status&quot;&gt;Status&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;em&gt;Rid&lt;&#x2F;em&gt; is functional at this point, but not &lt;em&gt;production ready&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;I have tested the &lt;a href=&quot;..&#x2F;..&#x2F;examples&#x2F;&quot;&gt;example apps&lt;&#x2F;a&gt; on macOS desktop, numerous iPhone simumlators and a physical
+Android device (Pixel running Android 10).&lt;&#x2F;p&gt;
+&lt;p&gt;I also took great care regarding memory management and used &lt;a href=&quot;https:&#x2F;&#x2F;valgrind.org&#x2F;&quot;&gt;valgrind&lt;&#x2F;a&gt;
+to ensure that &lt;em&gt;rid&lt;&#x2F;em&gt; doesn&#x27;t leak memory when used properly.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;Rid&lt;&#x2F;em&gt; is very well tested, especially the &lt;code&gt;rid-macro&lt;&#x2F;code&gt; crate which is responsible for
+generating the FFI glue code.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;roadmap&quot;&gt;Roadmap&lt;&#x2F;h2&gt;
+&lt;p&gt;I am adding features to &lt;em&gt;rid&lt;&#x2F;em&gt; by building example applications and filling in what&#x27;s needed.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;white-check-mark-async-support&quot;&gt;✅ Async Support&lt;&#x2F;h3&gt;
+&lt;p&gt;I&#x27;m planning on building the following two applications next:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Todo app using bloc state management&lt;&#x2F;li&gt;
+&lt;li&gt;reddit ticker which updates vote count of a post in real time&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Both require to communicate state changes from Rust asynchronously which are now supported.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;hammer-construction-worker-support-more-collection-types&quot;&gt;🔨👷 Support More Collection Types&lt;&#x2F;h3&gt;
+&lt;p&gt;This is an ongoing effort as they will be added on a per need basis. Most likely they will be
+added in the order below&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;collections&#x2F;hash_set&#x2F;struct.HashSet.html&quot;&gt;HashSet&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;collections&#x2F;struct.BTreeSet.html&quot;&gt;BTreeSet&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;collections&#x2F;struct.HashMap.html&quot;&gt;HashMap&lt;&#x2F;a&gt; &lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;collections&#x2F;struct.BTreeMap.html&quot;&gt;BTreeMap&lt;&#x2F;a&gt; &lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Please note that supporting fields of a particular type on &lt;em&gt;model&lt;&#x2F;em&gt; structs is a different task
+than supporing &lt;em&gt;export&lt;&#x2F;em&gt; functions to return values of same type.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;code&gt;Vec&lt;&#x2F;code&gt; type is currently supported for both cases.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;hammer-construction-worker-wasm-support&quot;&gt;🔨👷 Wasm Support&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;em&gt;Rid&lt;&#x2F;em&gt; will support all platforms that Flutter supports. Therefore it is essential that it can
+compile to wasm and generate the necessary glue code.&lt;&#x2F;p&gt;
+&lt;p&gt;I did have a first stab at this, and realized there are a lot of pieces missing still,
+especially on the Dart side. Therefore I put this off for a later time. For more information
+please refer to to &lt;a href=&quot;..&#x2F;..&#x2F;..&#x2F;blog&#x2F;wasm-support.md&quot;&gt;this post&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;hourglass-rid-cli-tool&quot;&gt;⌛ Rid CLI Tool&lt;&#x2F;h3&gt;
+&lt;p&gt;At this point &lt;em&gt;rid&lt;&#x2F;em&gt; apps are created via a template which includes scripts to generate glue
+code and build for different devices. They rely on the &lt;code&gt;rid-build&lt;&#x2F;code&gt; crate.&lt;&#x2F;p&gt;
+&lt;p&gt;I will create a CLI tool which will have numerous features aiding in the development of apps with &lt;em&gt;rid&lt;&#x2F;em&gt;:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;scaffold command&lt;&#x2F;strong&gt;: to create a ready to run and work on Dart or Flutter application&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;build command&lt;&#x2F;strong&gt;: which will create glue code and build binaries for each device &lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;hourglass-stability&quot;&gt;⌛ Stability&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;em&gt;Rid&lt;&#x2F;em&gt; is evolving very fast and has some gaps in the implementation. Even though most of them
+will be addressed by necessity when a new example app depends on it, I want to take some time
+to meticulously go through the code base and address most of them.&lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>Code of Conduct</title>
+		<published>2021-05-13T00:00:00+00:00</published>
+		<updated>2021-05-13T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/contributing/code-of-conduct/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/contributing/code-of-conduct/</id>
+		<content type="html">&lt;h2 id=&quot;our-pledge&quot;&gt;Our Pledge&lt;&#x2F;h2&gt;
+&lt;p&gt;We as members, contributors, and leaders pledge to make participation in our
+community a harassment-free experience for everyone, regardless of age, body
+size, visible or invisible disability, ethnicity, sex characteristics, gender
+identity and expression, level of experience, education, socio-economic status,
+nationality, personal appearance, race, caste, color, religion, or sexual identity
+and orientation.&lt;&#x2F;p&gt;
+&lt;p&gt;We pledge to act and interact in ways that contribute to an open, welcoming,
+diverse, inclusive, and healthy community.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;our-standards&quot;&gt;Our Standards&lt;&#x2F;h2&gt;
+&lt;p&gt;Examples of behavior that contributes to a positive environment for our
+community include:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Demonstrating empathy and kindness toward other people&lt;&#x2F;li&gt;
+&lt;li&gt;Being respectful of differing opinions, viewpoints, and experiences&lt;&#x2F;li&gt;
+&lt;li&gt;Giving and gracefully accepting constructive feedback&lt;&#x2F;li&gt;
+&lt;li&gt;Accepting responsibility and apologizing to those affected by our mistakes,
+and learning from the experience&lt;&#x2F;li&gt;
+&lt;li&gt;Focusing on what is best not just for us as individuals, but for the
+overall community&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Examples of unacceptable behavior include:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;The use of sexualized language or imagery, and sexual attention or
+advances of any kind&lt;&#x2F;li&gt;
+&lt;li&gt;Trolling, insulting or derogatory comments, and personal or political attacks&lt;&#x2F;li&gt;
+&lt;li&gt;Public or private harassment&lt;&#x2F;li&gt;
+&lt;li&gt;Publishing others&#x27; private information, such as a physical or email
+address, without their explicit permission&lt;&#x2F;li&gt;
+&lt;li&gt;Other conduct which could reasonably be considered inappropriate in a
+professional setting&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;enforcement-responsibilities&quot;&gt;Enforcement Responsibilities&lt;&#x2F;h2&gt;
+&lt;p&gt;Community leaders are responsible for clarifying and enforcing our standards of
+acceptable behavior and will take appropriate and fair corrective action in
+response to any behavior that they deem inappropriate, threatening, offensive,
+or harmful.&lt;&#x2F;p&gt;
+&lt;p&gt;Community leaders have the right and responsibility to remove, edit, or reject
+comments, commits, code, wiki edits, issues, and other contributions that are
+not aligned to this Code of Conduct, and will communicate reasons for moderation
+decisions when appropriate.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;scope&quot;&gt;Scope&lt;&#x2F;h2&gt;
+&lt;p&gt;This Code of Conduct applies within all community spaces, and also applies when
+an individual is officially representing the community in public spaces.
+Examples of representing our community include using an official e-mail address,
+posting via an official social media account, or acting as an appointed
+representative at an online or offline event.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;enforcement&quot;&gt;Enforcement&lt;&#x2F;h2&gt;
+&lt;p&gt;Instances of abusive, harassing, or otherwise unacceptable behavior may be
+reported to the community leaders responsible for enforcement at
+&lt;a href=&quot;mailto:aaranxu@outlook.com&quot;&gt;aaranxu@outlook.com&lt;&#x2F;a&gt;.
+All complaints will be reviewed and investigated promptly and fairly.&lt;&#x2F;p&gt;
+&lt;p&gt;All community leaders are obligated to respect the privacy and security of the
+reporter of any incident.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;enforcement-guidelines&quot;&gt;Enforcement Guidelines&lt;&#x2F;h2&gt;
+&lt;p&gt;Community leaders will follow these Community Impact Guidelines in determining
+the consequences for any action they deem in violation of this Code of Conduct:&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;1-correction&quot;&gt;1. Correction&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;strong&gt;Community Impact&lt;&#x2F;strong&gt;: Use of inappropriate language or other behavior deemed
+unprofessional or unwelcome in the community.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Consequence&lt;&#x2F;strong&gt;: A private, written warning from community leaders, providing
+clarity around the nature of the violation and an explanation of why the
+behavior was inappropriate. A public apology may be requested.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;2-warning&quot;&gt;2. Warning&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;strong&gt;Community Impact&lt;&#x2F;strong&gt;: A violation through a single incident or series
+of actions.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Consequence&lt;&#x2F;strong&gt;: A warning with consequences for continued behavior. No
+interaction with the people involved, including unsolicited interaction with
+those enforcing the Code of Conduct, for a specified period of time. This
+includes avoiding interactions in community spaces as well as external channels
+like social media. Violating these terms may lead to a temporary or
+permanent ban.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;3-temporary-ban&quot;&gt;3. Temporary Ban&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;strong&gt;Community Impact&lt;&#x2F;strong&gt;: A serious violation of community standards, including
+sustained inappropriate behavior.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Consequence&lt;&#x2F;strong&gt;: A temporary ban from any sort of interaction or public
+communication with the community for a specified period of time. No public or
+private interaction with the people involved, including unsolicited interaction
+with those enforcing the Code of Conduct, is allowed during this period.
+Violating these terms may lead to a permanent ban.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;4-permanent-ban&quot;&gt;4. Permanent Ban&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;strong&gt;Community Impact&lt;&#x2F;strong&gt;: Demonstrating a pattern of violation of community
+standards, including sustained inappropriate behavior,  harassment of an
+individual, or aggression toward or disparagement of classes of individuals.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Consequence&lt;&#x2F;strong&gt;: A permanent ban from any sort of public interaction within
+the community.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;attribution&quot;&gt;Attribution&lt;&#x2F;h2&gt;
+&lt;p&gt;This Code of Conduct is adapted from the &lt;a href=&quot;https:&#x2F;&#x2F;www.contributor-covenant.org&quot;&gt;Contributor Covenant&lt;&#x2F;a&gt;,
+version 2.0, available at
+&lt;a href=&quot;https:&#x2F;&#x2F;www.contributor-covenant.org&#x2F;version&#x2F;2&#x2F;0&#x2F;code_of_conduct.html&quot;&gt;https:&#x2F;&#x2F;www.contributor-covenant.org&#x2F;version&#x2F;2&#x2F;0&#x2F;code_of_conduct.html&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Community Impact Guidelines were inspired by 
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;mozilla&#x2F;diversity&quot;&gt;Mozilla&#x27;s code of conduct enforcement ladder&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;For answers to common questions about this code of conduct, see the FAQ at
+&lt;a href=&quot;https:&#x2F;&#x2F;www.contributor-covenant.org&#x2F;faq&quot;&gt;https:&#x2F;&#x2F;www.contributor-covenant.org&#x2F;faq&lt;&#x2F;a&gt;. Translations are available 
+at &lt;a href=&quot;https:&#x2F;&#x2F;www.contributor-covenant.org&#x2F;translations&quot;&gt;https:&#x2F;&#x2F;www.contributor-covenant.org&#x2F;translations&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>How to Contribute</title>
+		<published>2021-05-13T00:00:00+00:00</published>
+		<updated>2021-05-13T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/contributing/how-to-contribute/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/contributing/how-to-contribute/</id>
+		<content type="html">&lt;p&gt;👉 Make sure to read the &lt;a href=&quot;..&#x2F;code-of-conduct&#x2F;&quot;&gt;Code of Conduct&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;contribute-to-rid&quot;&gt;Contribute to Rid&lt;&#x2F;h2&gt;
+&lt;p&gt;👉 The Rid examples live in the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid-examples&quot;&gt;&lt;code&gt;rid-exampes&lt;&#x2F;code&gt; repository&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Create a fun application using Rid and submit it via a pull request&lt;&#x2F;li&gt;
+&lt;li&gt;Follow the &lt;a href=&quot;https:&#x2F;&#x2F;guides.github.com&#x2F;introduction&#x2F;flow&#x2F;&quot;&gt;GitHub flow&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;Follow the &lt;a href=&quot;https:&#x2F;&#x2F;www.conventionalcommits.org&#x2F;en&#x2F;v1.0.0&#x2F;&quot;&gt;Conventional Commits Specification&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;create-an-issue&quot;&gt;Create an issue&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid&#x2F;issues&#x2F;new&quot;&gt;Bug report&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid&#x2F;issues&#x2F;new&quot;&gt;Feature request&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;improve-documentation&quot;&gt;Improve documentation&lt;&#x2F;h2&gt;
+&lt;p&gt;👉 The documentation lives in &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid-site&#x2F;tree&#x2F;master&#x2F;content&#x2F;docs&quot;&gt;&lt;code&gt;.&#x2F;content&#x2F;docs&#x2F;&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;
+of the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid-site&quot;&gt;&lt;code&gt;rid-site&lt;&#x2F;code&gt; repository&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Improve, add or correct the documentation and submit it via a pull request&lt;&#x2F;li&gt;
+&lt;li&gt;Follow the &lt;a href=&quot;https:&#x2F;&#x2F;guides.github.com&#x2F;introduction&#x2F;flow&#x2F;&quot;&gt;GitHub flow&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;Follow the &lt;a href=&quot;https:&#x2F;&#x2F;www.conventionalcommits.org&#x2F;en&#x2F;v1.0.0&#x2F;&quot;&gt;Conventional Commits Specification&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;sponsor&quot;&gt;Sponsor&lt;&#x2F;h2&gt;
+&lt;p&gt;You can also help &lt;em&gt;Rid&lt;&#x2F;em&gt; development by supporting it financially via a &lt;a href=&quot;..&#x2F;sponsor&#x2F;&quot;&gt;monthly donation&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>Sponsor</title>
+		<published>2021-05-13T00:00:00+00:00</published>
+		<updated>2021-05-13T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/contributing/sponsor/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/contributing/sponsor/</id>
+		<content type="html">&lt;p&gt;&lt;em&gt;Rid&lt;&#x2F;em&gt; is &lt;em&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;sponsorware&#x2F;docs&quot;&gt;Sponsorware&lt;&#x2F;a&gt;&lt;&#x2F;em&gt; and thus not open sourced yet. &lt;&#x2F;p&gt;
+&lt;p&gt;You &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;sponsors&#x2F;thlorenz&quot;&gt;can sponsor me&lt;&#x2F;a&gt; via a monthly contribution and
+&lt;strong&gt;gain immediate access&lt;&#x2F;strong&gt; to the currently private &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid&quot;&gt;&lt;em&gt;rid&lt;&#x2F;em&gt;&lt;&#x2F;a&gt;
+repository.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;I will fully open source &lt;em&gt;rid&lt;&#x2F;em&gt; to everyone once I reach 60 sponsors&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;By sponsoring me you not only show your appreciation for all the work that went into &lt;em&gt;rid&lt;&#x2F;em&gt;
+already, but also &lt;strong&gt;help me evolve, stabilize and maintain&lt;&#x2F;strong&gt; it.&lt;&#x2F;p&gt;
+&lt;p&gt;Sponsors also receive early access to screencasts and tutorials about &lt;em&gt;rid&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;I greatly appreciate it. 🙏 ❤️&lt;&#x2F;p&gt;
+&lt;br&gt;
+&lt;p&gt;👉 Please select a &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;sponsors&#x2F;thlorenz&quot;&gt;tier that applies to you&lt;&#x2F;a&gt; and support
+&lt;em&gt;Rid&lt;&#x2F;em&gt; development.&lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>Dart only Todo App</title>
+		<published>2021-05-13T00:00:00+00:00</published>
+		<updated>2021-05-13T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/examples/dart-todo-app/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/examples/dart-todo-app/</id>
+		<content type="html">&lt;p&gt;&lt;img src=&quot;..&#x2F;dart-todo.png&quot; alt=&quot;img&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Please read the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid-examples&#x2F;tree&#x2F;master&#x2F;dart&#x2F;todo&quot;&gt;source and quick
+walkthrough&lt;&#x2F;a&gt; of this example as
+part of the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid-examples&quot;&gt;rid examples repo&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;screencast&quot;&gt;Screencast&lt;&#x2F;h2&gt;
+&lt;iframe width=&quot;690&quot; height=&quot;388&quot; src=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;embed&#x2F;qdy4VI9YqVc&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture&quot; allowfullscreen&gt;&lt;&#x2F;iframe&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>Multithreaded Todo App</title>
+		<published>2021-05-13T00:00:00+00:00</published>
+		<updated>2021-05-13T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/examples/flutter-todo-app/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/examples/flutter-todo-app/</id>
+		<content type="html">&lt;p&gt;&lt;img src=&quot;..&#x2F;flutter-todo.png&quot; alt=&quot;img&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;👉 Read the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid-examples&#x2F;tree&#x2F;master&#x2F;flutter&#x2F;todo_cubit&quot;&gt;source&lt;&#x2F;a&gt; of this example
+as part of the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid-examples&quot;&gt;rid examples repo&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;👉 &lt;a href=&quot;..&#x2F;..&#x2F;getting-started&#x2F;introduction&#x2F;&quot;&gt;Get started with &lt;em&gt;Rid&lt;&#x2F;em&gt;&lt;&#x2F;a&gt; and &lt;a href=&quot;..&#x2F;..&#x2F;getting-started&#x2F;architecture&#x2F;&quot;&gt;learn about its
+architecture&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;screencast&quot;&gt;Screencast&lt;&#x2F;h2&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;embed&#x2F;PGKBdxOA6Xs&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture&quot; allowfullscreen&gt;&lt;&#x2F;iframe&gt;
+&lt;p&gt;Here we are use Rid to easily integrate Rust with Flutter via simple annotations and
+demonstrate the easy to use yet memory safe API to your Rust code which our Bloc&#x2F;Cubits can
+leverage.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;walkthrough&quot;&gt;Walkthrough&lt;&#x2F;h2&gt;
+&lt;p&gt;Make sure to check back for step by step instructions on how to build this application.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;..&#x2F;..&#x2F;contributing&#x2F;sponsor&#x2F;&quot;&gt;Sponsors&lt;&#x2F;a&gt; get early access.&lt;&#x2F;p&gt;
+&lt;div style=&quot;opacity: 0.6;&quot;&gt;
+&lt;h4&gt;Older Screencast of Single Threaded Todo App&lt;&#x2F;h4&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;embed&#x2F;Rs3_N4maNPw&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture&quot; allowfullscreen&gt;&lt;&#x2F;iframe&gt;
+&lt;p&gt;&lt;em&gt;Some of the API used is now obsolete and all apps now use the Message&#x2F;Reply pattern instead of
+expecting Store updates to complete synchronously.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;However it is still an interesting watch if you want to understand more about how Rid works and
+how it evolved.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>Application Architecture</title>
+		<published>2021-05-13T00:00:00+00:00</published>
+		<updated>2021-05-13T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/getting-started/architecture/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/getting-started/architecture/</id>
+		<content type="html">&lt;h2 id=&quot;ui-separated-from-app-logic&quot;&gt;UI separated from App Logic&lt;&#x2F;h2&gt;
+&lt;p&gt;Each application created with Rid is divided into two major parts. &lt;&#x2F;p&gt;
+&lt;p&gt;The UI implemented in Flutter&#x2F;Dart concerns itself only with rendering &lt;em&gt;Widgets&lt;&#x2F;em&gt; and user
+interaction. It delegates to Rust for all application logic.&lt;&#x2F;p&gt;
+&lt;p&gt;All application state is held by Rust. Application logic mutating that state is implemented in
+Rust.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;rust-state-and-logic-implementation&quot;&gt;Rust State and Logic Implementation&lt;&#x2F;h2&gt;
+&lt;p&gt;A &lt;em&gt;rid&lt;&#x2F;em&gt; application has one main model, the &lt;em&gt;Store&lt;&#x2F;em&gt;, which holds the application state. This
+state is not modified from the UI. Instead the UI sends messages to Rust in order to relay user
+interaction. Rust then modifies the state of the application and responds with a &lt;em&gt;Reply&lt;&#x2F;em&gt; in
+order to communicate that the message has been handled. At that point the UI can query the
+state of the &lt;em&gt;Store&lt;&#x2F;em&gt; and update itself.&lt;&#x2F;p&gt;
+&lt;p&gt;All logic needed to derive the new state from the previous one as a result of a user
+interaction is implemented in Rust. Flutter only consumes this state and when needed
+transforms it slightly and only locally in order to make it presentable via a &lt;em&gt;Widget&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Flutter should never modify the global application state directly.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;store-message-and-reply&quot;&gt;Store, Message and Reply&lt;&#x2F;h3&gt;
+&lt;p&gt;The &lt;em&gt;Store&lt;&#x2F;em&gt; &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;keyword.struct.html&quot;&gt;&lt;em&gt;struct&lt;&#x2F;em&gt;&lt;&#x2F;a&gt; of your application
+holds all the application&#x27;s state. The &lt;em&gt;Store&lt;&#x2F;em&gt; can reference other model &lt;em&gt;structs&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Rid assumes that all &lt;em&gt;Messages&lt;&#x2F;em&gt; may be handled asynchronously and thus will never make the
+assumption that the state of the &lt;em&gt;Store&lt;&#x2F;em&gt; was modified in response to it after the &lt;code&gt;update&lt;&#x2F;code&gt;
+method completes.&lt;&#x2F;p&gt;
+&lt;p&gt;Instead it uses a &lt;em&gt;Request&#x2F;Reply&lt;&#x2F;em&gt; mechanism to allow signaling that the state of the &lt;em&gt;Store&lt;&#x2F;em&gt;
+was completely updated in response to a &lt;em&gt;Message&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;em&gt;Message&lt;&#x2F;em&gt; is defined via an &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;keyword.enum.html&quot;&gt;&lt;em&gt;enum&lt;&#x2F;em&gt;&lt;&#x2F;a&gt;. It is used to send messages to the model and should be
+the only means of mutating it. The variants of the message &lt;em&gt;enum&lt;&#x2F;em&gt; can have associated data
+which is used to pass a message payload from Dart (see &lt;code&gt;Msg::Add(u32)&lt;&#x2F;code&gt; below).&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;em&gt;Message&lt;&#x2F;em&gt; enum is associated with a &lt;em&gt;Reply&lt;&#x2F;em&gt; enum which is used to respond to messages after
+they are handled.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Example&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;store&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub struct &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Store {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;count&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+}
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;impl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;rid::RidStore&amp;lt;Msg&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Store {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;create&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() -&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{ count: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;}
+    }
+
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;update&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;req_id&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u64&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;msg&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Msg) {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;match&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; msg {
+            Msg::Inc =&amp;gt; {
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.count += &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;;
+                rid::post(Reply::Increased(req_id));
+            }
+            Msg::Add(n) =&amp;gt; {
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.count += n;
+                rid::post(Reply::Added(req_id, n.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;to_string&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()));
+            }
+        }
+    }
+}
+
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;message&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Reply)]
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;derive&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Debug, Clone)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub enum &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Msg {
+    Inc,
+    Add(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;),
+}
+
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;reply&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;derive&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Clone)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub enum &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Reply {
+    Increased(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u64&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;),
+    Added(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u64&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, String),
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;As you can see the &lt;code&gt;#[rid::message(Reply)]&lt;&#x2F;code&gt; attribute defines the type of the &lt;em&gt;Reply&lt;&#x2F;em&gt; used to
+respond to &lt;em&gt;Messages&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;👉 read more about &lt;a href=&quot;..&#x2F;..&#x2F;rid-attributes&#x2F;message-reply&#x2F;&quot;&gt;rid::message and rid::reply&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;accessing-state-and-sending-messages&quot;&gt;Accessing State and Sending Messages&lt;&#x2F;h2&gt;
+&lt;p&gt;As mentioned, all state is held by Rust. It is exposed to Flutter via a &lt;em&gt;Getter&lt;&#x2F;em&gt; based API.
+State is only transfered once accessed in order to improve performance. To make things easier
+the recommended API converts all data to Dart instances to avoid memory races and access
+issues. &lt;&#x2F;p&gt;
+&lt;p&gt;TODO: link separate document of higher level API details&lt;&#x2F;p&gt;
+&lt;p&gt;For cases where more control is required and the performance suffers, i.e. when sending huge
+lists of items, a lower level API is provided as well. As an example when using that API an item of a
+&lt;code&gt;Vec&amp;lt;u8&amp;gt;&lt;&#x2F;code&gt; is only passed once it is accessed by indexing into the &lt;em&gt;collection&lt;&#x2F;em&gt;. However the
+developer is now responsible to properly &lt;em&gt;lock&lt;&#x2F;em&gt; the &lt;em&gt;Store&lt;&#x2F;em&gt; to ensure that this vector wasn&#x27;t
+mutated in the meantime.&lt;&#x2F;p&gt;
+&lt;p&gt;TODO: link separate document of raw API details&lt;&#x2F;p&gt;
+&lt;p&gt;In response to user interaction like a button click we send messages to Rust in order to cause
+the &lt;em&gt;Store&lt;&#x2F;em&gt; to be updated.&lt;&#x2F;p&gt;
+&lt;p&gt;Using the recommended higher level API to interact with the above Rust &lt;em&gt;Store&lt;&#x2F;em&gt; from Flutter we
+could do the following. &lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-dart&quot; data-lang=&quot;dart&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;class &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;_MyHomePageState &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;extends &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;State&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;MyHomePage&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; {
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt; store = &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#ebcb8b;&quot;&gt;Store&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;.instance;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;@override
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Widget &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;BuildContext&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; context) {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Scaffold&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+      body: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Center&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+        child: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Column&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+          mainAxisAlignment: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;MainAxisAlignment&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.center,
+          children: [
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Text&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;#39;You have counted to:&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;),
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;            &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#ebcb8b;&quot;&gt;Text&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#a3be8c;&quot;&gt;&amp;#39;${&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#bf616a;&quot;&gt;store.count&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#a3be8c;&quot;&gt;}&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;),
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;          ],
+        ),
+      ),
+      floatingActionButton: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Row&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+        mainAxisAlignment: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;MainAxisAlignment&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.end,
+        children: [
+          &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;FloatingActionButton&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+            onPressed: () =&amp;gt; { 
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;              store.&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#8fa1b3;&quot;&gt;msgAdd&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#d08770;&quot;&gt;10&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#8fa1b3;&quot;&gt;then&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;((_) =&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#8fa1b3;&quot;&gt;setState&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;(() {})); 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;            }),
+            child: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Icon&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Icons&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.add),
+          ),
+          &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;FloatingActionButton&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+            onPressed: () =&amp;gt; { 
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;              store.&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#8fa1b3;&quot;&gt;msgInc&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#d08770;&quot;&gt;10&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#8fa1b3;&quot;&gt;then&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;((_) =&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#8fa1b3;&quot;&gt;setState&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;(() {})); 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;            }),
+            child: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Icon&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Icons&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.add),
+          ),
+        ],
+      ),
+    );
+  }
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h2 id=&quot;rid-s-raw-api&quot;&gt;Rid&#x27;s Raw Api&lt;&#x2F;h2&gt;
+&lt;p&gt;TODO: This is a quick summary of the &lt;em&gt;raw&lt;&#x2F;em&gt; rid API. It will be moved into its own doc shortly and a
+doc for the &lt;em&gt;recommended&lt;&#x2F;em&gt; higher level rid API will be provided alongside it.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;how-data-is-passed&quot;&gt;How Data is Passed&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;primitives like &lt;code&gt;u8&lt;&#x2F;code&gt;, &lt;code&gt;i32&lt;&#x2F;code&gt; and C-style &lt;code&gt;enum&lt;&#x2F;code&gt;s are copied and passed &lt;em&gt;by value&lt;&#x2F;em&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;strings like &lt;code&gt;String&lt;&#x2F;code&gt;, &lt;code&gt;&amp;amp;str&lt;&#x2F;code&gt; are passed &lt;em&gt;by reference&lt;&#x2F;em&gt;, but Rid immediately releases them after
+converting into a Dart String&lt;&#x2F;li&gt;
+&lt;li&gt;structs are passed as pointers &lt;em&gt;by reference&lt;&#x2F;em&gt; and expose &lt;em&gt;Getters&lt;&#x2F;em&gt; to access their fields&lt;&#x2F;li&gt;
+&lt;li&gt;collections like &lt;code&gt;Vec&lt;&#x2F;code&gt; are passed &lt;em&gt;by reference&lt;&#x2F;em&gt; and Rid exposes an &lt;em&gt;Iterable&lt;&#x2F;em&gt; interface to
+provide access to each item&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;accessing-and-iterating-collections&quot;&gt;Accessing and Iterating Collections&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;em&gt;Rid&lt;&#x2F;em&gt; wraps the retrieved &lt;em&gt;pointer&lt;&#x2F;em&gt; of a &lt;em&gt;collection&lt;&#x2F;em&gt; in an API that exposes a convenient
+&lt;em&gt;iterable&lt;&#x2F;em&gt; interface as well as an indexing operator.&lt;&#x2F;p&gt;
+&lt;p&gt;Have a look at the below list of &lt;code&gt;todos&lt;&#x2F;code&gt; defined on the &lt;code&gt;model&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;model&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;derive&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Debug, rid::Debug)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub struct &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Todo {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;title&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: String
+}
+
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;model&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;structs&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Todo)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub struct &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Model {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;todos&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Vec&amp;lt;Todo&amp;gt;,
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;em&gt;Note&lt;&#x2F;em&gt;: that we &lt;code&gt;#[derive(Debug, rid::Debug)]&lt;&#x2F;code&gt; for the &lt;code&gt;Todo&lt;&#x2F;code&gt; in order to call it from Flutter
+via &lt;code&gt;todo.debug([pretty])&lt;&#x2F;code&gt;, see &lt;a href=&quot;..&#x2F;..&#x2F;rid-attributes&#x2F;debug&#x2F;&quot;&gt;rid::debug&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Those &lt;code&gt;todos&lt;&#x2F;code&gt; can be used on the Flutter end like any &lt;em&gt;Iterable&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-dart&quot; data-lang=&quot;dart&quot;&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;queryTodos&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Pointer&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Model&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; model) {
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; todos = model.todos;
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt; total = todos.length;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;quot;Total Todos:     $&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;total&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Todos:&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#b48ead;&quot;&gt;for&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt; (&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt; todo &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#b48ead;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt; matchingTodos.&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#8fa1b3;&quot;&gt;iter&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;()) {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;quot;    ${&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;todo.debug()&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;}&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+  }
+  
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt; firstTodo = todos[&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;];
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; todoTitles = todos.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;iter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;map&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;((todo) =&amp;gt; todo.title);
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; todoSummedIds =
+      todos.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;iter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;map&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;((todo) =&amp;gt; todo.id).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;reduce&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;((acc, id) =&amp;gt; acc + id);
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; todosUrgent =
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;      todos.&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#8fa1b3;&quot;&gt;iter&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#8fa1b3;&quot;&gt;where&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;((todo) =&amp;gt; todo.title.&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#8fa1b3;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#a3be8c;&quot;&gt;&amp;#39;urgent&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;));
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;em&gt;See also&lt;&#x2F;em&gt;: &lt;a href=&quot;..&#x2F;..&#x2F;rid-attributes&#x2F;structs-enums&#x2F;&quot;&gt;#rid::structs&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>rid::debug</title>
+		<published>2021-05-13T00:00:00+00:00</published>
+		<updated>2021-05-13T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/rid-attributes/debug/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/rid-attributes/debug/</id>
+		<content type="html">&lt;h2 id=&quot;models-that-derive-debug&quot;&gt;Models that &lt;code&gt;#[derive(Debug)]&lt;&#x2F;code&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;If a &lt;em&gt;struct&lt;&#x2F;em&gt; or &lt;em&gt;enum&lt;&#x2F;em&gt; is annotated with &lt;code&gt;#[rid::model]&lt;&#x2F;code&gt; or &lt;code&gt;#[rid::store]&lt;&#x2F;code&gt; &lt;em&gt;rid&lt;&#x2F;em&gt;
+automatically detects if it &lt;em&gt;derives&lt;&#x2F;em&gt; &lt;code&gt;Debug&lt;&#x2F;code&gt; via &lt;code&gt;#[derive(Debug)]&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;I such a &lt;em&gt;derive&lt;&#x2F;em&gt; is found then &lt;em&gt;rid&lt;&#x2F;em&gt; generates the following method for the &lt;em&gt;raw&lt;&#x2F;em&gt; Dart type
+representing that Rust type.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-dart&quot; data-lang=&quot;dart&quot;&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;String &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;debug&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;([&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;bool&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; pretty = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]) { 
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Call to Rust to obtain the Debug respresentation
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;ul&gt;
+&lt;li&gt;passing &lt;code&gt;true&lt;&#x2F;code&gt; for &lt;em&gt;pretty&lt;&#x2F;em&gt; corresponds to &lt;code&gt;format!(&amp;quot;{:#?}&amp;quot;, instance)&lt;&#x2F;code&gt; to get a more verbose
+and readable &lt;em&gt;String&lt;&#x2F;em&gt; representation of the &lt;em&gt;struct&lt;&#x2F;em&gt; instance&lt;&#x2F;li&gt;
+&lt;li&gt;passing &lt;code&gt;false&lt;&#x2F;code&gt; or omitting &lt;em&gt;pretty&lt;&#x2F;em&gt; corresponds to &lt;code&gt;format!(&amp;quot;{:?}&amp;quot;, instance)&lt;&#x2F;code&gt; to get a less
+verbose_String_ representation of the &lt;em&gt;struct&lt;&#x2F;em&gt; instance&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-dart&quot; data-lang=&quot;dart&quot;&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Store&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.instance.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;debug&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;));
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h3 id=&quot;inclusion-in-dart-api&quot;&gt;Inclusion in Dart API&lt;&#x2F;h3&gt;
+&lt;p&gt;This &lt;code&gt;debug&lt;&#x2F;code&gt; method is not included in the Dart class generated for such &lt;em&gt;structs&lt;&#x2F;em&gt; as memory
+safety cannot be guaranteed since the &lt;em&gt;pointer&lt;&#x2F;em&gt; to the &lt;em&gt;struct&lt;&#x2F;em&gt; could become invalid from one
+call to the next.&lt;&#x2F;p&gt;
+&lt;p&gt;For the &lt;em&gt;Store&lt;&#x2F;em&gt; however this &lt;em&gt;debug&lt;&#x2F;em&gt; method is included in the recommended Dart API as well since in
+this case it is memory safe since the &lt;em&gt;Store&lt;&#x2F;em&gt; pointer will never become invalid while the app
+is running.&lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>rid::message and rid::reply</title>
+		<published>2021-05-13T00:00:00+00:00</published>
+		<updated>2021-05-13T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/rid-attributes/message-reply/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/rid-attributes/message-reply/</id>
+		<content type="html">&lt;h2 id=&quot;what-is-it&quot;&gt;What is it?&lt;&#x2F;h2&gt;
+&lt;p&gt;A Rust enum can be annotated with the &lt;code&gt;#[rid::reply]&lt;&#x2F;code&gt; attribute. &lt;&#x2F;p&gt;
+&lt;p&gt;This same enum can then be used when annotating another enum with the &lt;code&gt;#[rid::message(Reply)]&lt;&#x2F;code&gt;
+attribute. &lt;&#x2F;p&gt;
+&lt;p&gt;This is how &lt;em&gt;Messages&lt;&#x2F;em&gt; and &lt;em&gt;Replies&lt;&#x2F;em&gt; are setup for a &lt;em&gt;rid&lt;&#x2F;em&gt; application.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;how-rid-sends-messages&quot;&gt;How Rid sends Messages&lt;&#x2F;h2&gt;
+&lt;p&gt;TODO complete&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;how-rid-receives-replies&quot;&gt;How Rid receives Replies&lt;&#x2F;h2&gt;
+&lt;p&gt;TODO complete&lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>rid::model</title>
+		<published>2021-05-13T00:00:00+00:00</published>
+		<updated>2021-05-13T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/rid-attributes/model/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/rid-attributes/model/</id>
+		<content type="html">&lt;h2 id=&quot;what-is-it&quot;&gt;What is it?&lt;&#x2F;h2&gt;
+&lt;p&gt;Any Rust struct can be annotated with the &lt;code&gt;#[rid::model]&lt;&#x2F;code&gt; attribute. As a result all the fields
+of that struct will be made available to Dart as &lt;em&gt;Getters&lt;&#x2F;em&gt; on the model instance. Note that fields
+cannot be mutated directly from the Dart side which is intentional, see &lt;a href=&quot;..&#x2F;..&#x2F;getting-started&#x2F;architecture&#x2F;&quot;&gt;rid architecture&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;model&quot;&gt;Model&lt;&#x2F;h2&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;model&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub struct &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Todo {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;id&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;title&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: String,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;completed&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;bool&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;Todo&lt;&#x2F;code&gt; only has primitive types and is not the main entry point to the application&#x27;s state.
+Thus it is very simple to setup.&lt;&#x2F;p&gt;
+&lt;p&gt;This &lt;code&gt;Todo&lt;&#x2F;code&gt; is represented on the Dart side via a Dart &lt;em&gt;class&lt;&#x2F;em&gt; of the same name. This class has
+overrides for &lt;em&gt;equality&lt;&#x2F;em&gt; (&lt;code&gt;operator ==&lt;&#x2F;code&gt; and &lt;code&gt;hashCode&lt;&#x2F;code&gt;) as well as &lt;code&gt;toString&lt;&#x2F;code&gt; already
+implemented for your convenience.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-dart&quot; data-lang=&quot;dart&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;final &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Todo&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; todo = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Store&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.instance.todos[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;];
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; status = todo.completed ? &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;#39;done&amp;#39; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;#39;pending&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;#39;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;todo&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;A &lt;em&gt;raw&lt;&#x2F;em&gt; pointer to the &lt;code&gt;Todo&lt;&#x2F;code&gt; is exposed to Dart as well via the lower level API. Using this
+API is recommended only in cases in which you need more direct control for instance when you
+need to tweak performance. It does not come with any of the memory safety guarantees that the
+recommended API provides.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-dart&quot; data-lang=&quot;dart&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;final &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Pointer&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;RawTodo&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; todo = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Store&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.instance.raw.todos[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;];
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;#39;${&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;todo.title&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;} with id ${&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;todo.id&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;} is $&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;status&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>rid::store</title>
+		<published>2021-05-13T00:00:00+00:00</published>
+		<updated>2021-05-13T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/rid-attributes/store/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/rid-attributes/store/</id>
+		<content type="html">&lt;h2 id=&quot;store&quot;&gt;Store&lt;&#x2F;h2&gt;
+&lt;p&gt;There is exactly one &lt;em&gt;main&lt;&#x2F;em&gt; model per application which is called the &lt;code&gt;Store&lt;&#x2F;code&gt;. It is annotated
+with &lt;code&gt;#[rid::store].&lt;&#x2F;code&gt; The &lt;em&gt;Store&lt;&#x2F;em&gt; is the &lt;em&gt;main&lt;&#x2F;em&gt; entry point to the application&#x27;s state.&lt;&#x2F;p&gt;
+&lt;p&gt;A &lt;em&gt;Store&lt;&#x2F;em&gt; is a &lt;code&gt;#[rid::model]&lt;&#x2F;code&gt; with some special characteristics. You can think of a
+&lt;code&gt;#[rid:store]&lt;&#x2F;code&gt; as a superset of a &lt;code&gt;#[rid::model]&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;store&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;structs&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Todo)]
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;enums&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Filter)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub struct &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Store {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;last_added_id&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;todos&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Vec&amp;lt;Todo&amp;gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;filter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Filter,
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The &lt;code&gt;#[rid::store]&lt;&#x2F;code&gt; &lt;em&gt;struct&lt;&#x2F;em&gt; type has to be called &lt;code&gt;Store&lt;&#x2F;code&gt;. This is a convention that enables
+certain &lt;em&gt;rid&lt;&#x2F;em&gt; features and makes it easier to use and configure.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;annotations-about-non-primitive-types&quot;&gt;Annotations about Non-Primitive Types&lt;&#x2F;h3&gt;
+&lt;p&gt;As you can see we include type information of &lt;code&gt;Todo&lt;&#x2F;code&gt; and &lt;code&gt;Filter&lt;&#x2F;code&gt; via &lt;code&gt;rid::structs&lt;&#x2F;code&gt; and
+&lt;code&gt;rid::enums&lt;&#x2F;code&gt; respectively. This is necessary because the &lt;code&gt;rid::store&lt;&#x2F;code&gt; attribute only has access
+to the annotated &lt;code&gt;Store&lt;&#x2F;code&gt; struct and thus no way to deduce this information.&lt;&#x2F;p&gt;
+&lt;p&gt;However in order to generate correct wrappers to access the &lt;em&gt;Model&lt;&#x2F;em&gt; fields it needs this
+information.&lt;&#x2F;p&gt;
+&lt;p&gt;👉 read more about &lt;a href=&quot;.&#x2F;..&#x2F;structs-enums&#x2F;&quot;&gt;structs and enums&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;The same is true for when creating &lt;em&gt;Models&lt;&#x2F;em&gt; with the &lt;code&gt;#[rid::model]&lt;&#x2F;code&gt; attribute.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-rid-ridstore-trait&quot;&gt;The &lt;code&gt;rid:RidStore&lt;&#x2F;code&gt; Trait&lt;&#x2F;h2&gt;
+&lt;p&gt;The &lt;em&gt;Store&lt;&#x2F;em&gt; has to implement the &lt;code&gt;RidStore&lt;&#x2F;code&gt; trait which looks as follows:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub trait &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;RidStore&amp;lt;TMsg&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;create&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() -&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;;
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;update&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;req_id&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u64&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;msg&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: TMsg);
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The &lt;code&gt;create&lt;&#x2F;code&gt; method initializes the &lt;em&gt;Store&lt;&#x2F;em&gt; and is only called once.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;code&gt;update&lt;&#x2F;code&gt; method is called each time a &lt;em&gt;message&lt;&#x2F;em&gt; of type &lt;code&gt;TMsg&lt;&#x2F;code&gt; is received. Note how it is
+called with the &lt;code&gt;req_id&lt;&#x2F;code&gt; which needs to be included with the message &lt;em&gt;reply&lt;&#x2F;em&gt; via &lt;code&gt;rid::post&lt;&#x2F;code&gt; in
+order to associate the two.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;example-rid-ridstore-trait-implementation&quot;&gt;Example &lt;code&gt;rid:RidStore&lt;&#x2F;code&gt; Trait Implementation&lt;&#x2F;h3&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;impl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;rid::RidStore&amp;lt;Msg&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Store {
+     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;create&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() -&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; todos = vec![Todo { title: &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Learn Rust&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;to_string&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() }]; 
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{ todos }
+    }
+    
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;update&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;req_id&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u64&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;msg&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Msg) {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;match&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; msg {
+            Msg::AddTodo(title) =&amp;gt; {
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.todos.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;push&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Todo { title });
+                rid::post(Reply::AddedTodo(req_id));
+            }
+        }
+    }
+}
+
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;message&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Reply)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub enum &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Msg { AddTodo(String) }
+
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;reply&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub enum &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Reply { AddedTodo(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u64&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) }
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Here we reply to the &lt;code&gt;Add&lt;&#x2F;code&gt; &lt;em&gt;message&lt;&#x2F;em&gt; with the &lt;code&gt;Added&lt;&#x2F;code&gt; &lt;em&gt;reply&lt;&#x2F;em&gt; including the &lt;code&gt;req_id&lt;&#x2F;code&gt;. &lt;&#x2F;p&gt;
+&lt;p&gt;This allows rid to wait for the &lt;em&gt;message&lt;&#x2F;em&gt; to be handled by waiting for a &lt;em&gt;reply&lt;&#x2F;em&gt; whose &lt;code&gt;req_id&lt;&#x2F;code&gt;
+matches that of the sent &lt;em&gt;message&lt;&#x2F;em&gt;. As a result user code can &lt;code&gt;await&lt;&#x2F;code&gt; a &lt;em&gt;message&lt;&#x2F;em&gt; being
+handled on the Dart side.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-dart&quot; data-lang=&quot;dart&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;await &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Store&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.instance.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;msgAddTodo&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;quot;Understand Messages and Replies&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;👉 read more about &lt;a href=&quot;.&#x2F;..&#x2F;message-reply&#x2F;&quot;&gt;message and reply&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>rid::structs and rid::enums</title>
+		<published>2021-05-13T00:00:00+00:00</published>
+		<updated>2021-05-13T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/rid-attributes/structs-enums/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/rid-attributes/structs-enums/</id>
+		<content type="html">&lt;p&gt;The glue code that &lt;em&gt;rid&lt;&#x2F;em&gt; generates for &lt;code&gt;struct&lt;&#x2F;code&gt;s is different from &lt;code&gt;enum&lt;&#x2F;code&gt;s. Therefore for
+non-builtin types we need to let it know which it is dealing with.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;todo&quot;&gt;TODO&lt;&#x2F;h2&gt;
+&lt;p&gt;Explain &lt;code&gt;#[rid::structs]&lt;&#x2F;code&gt; and &lt;code&gt;#[rid::enums]&lt;&#x2F;code&gt; in more detail.&lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>Thorsten Lorenz</title>
+		<published>2021-05-12T00:00:00+00:00</published>
+		<updated>2021-05-12T00:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/authors/thlorenz/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/authors/thlorenz/</id>
+		<content type="html">&lt;p&gt;Creator of &lt;strong&gt;Rid&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&quot;&gt;@thlorenz&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>Introduction</title>
+		<published>2021-05-01T08:00:00+00:00</published>
+		<updated>2021-05-01T08:00:00+00:00</updated>
+		<link href="https://thlorenz.com/rid-site/docs/getting-started/introduction/" type="text/html"/>
+		<id>https://thlorenz.com/rid-site/docs/getting-started/introduction/</id>
+		<content type="html">&lt;h2 id=&quot;quick-start&quot;&gt;Quick Start&lt;&#x2F;h2&gt;
+&lt;p&gt;Please have a look at the below snippets to get an idea of how &lt;em&gt;Rid&lt;&#x2F;em&gt; helps you integrate
+your Flutter&#x2F;Dart UI with your application logic implemented in Rust. Then continue by reading
+about the &lt;a href=&quot;..&#x2F;architecture&#x2F;&quot;&gt;Rid Application Architecture →&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Rust&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;store&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;structs&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Todo)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub struct &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Store {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;todos&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Vec&amp;lt;Todo&amp;gt;,
+}
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;impl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;rid::RidStore&amp;lt;Msg&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Store {
+     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;create&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() -&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; todos = vec![Todo { title: &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Learn Rust&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;to_string&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() }]; 
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{ todos }
+    }
+    
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;update&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;req_id&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u64&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;msg&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Msg) {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;match&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; msg {
+            Msg::AddTodo(title) =&amp;gt; {
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.todos.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;push&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Todo { title });
+                rid::post(Reply::AddedTodo(req_id));
+            }
+        }
+    }
+}
+
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;message&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Reply)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub enum &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Msg {
+    AddTodo(String),
+}
+
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;reply&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub enum &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Reply {
+    AddedTodo(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u64&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;),
+}
+
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;model&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub struct &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Todo {
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;title&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: String
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;strong&gt;Dart&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-dart&quot; data-lang=&quot;dart&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; store = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Store&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.instance;
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;await&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; store.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;msgAddTodo&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;#39;Learn Rid&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; todo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; store.todos) {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;quot;${&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;todo.title&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;}&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;strong&gt;Flutter&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-dart&quot; data-lang=&quot;dart&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() {
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt; store = &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#ebcb8b;&quot;&gt;Store&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;.instance;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;runApp&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;TodoApp&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(model));
+}
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; [ .. ]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;class &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;TodosView &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;extends &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;StatelessWidget&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; {
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#b48ead;&quot;&gt;final &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#ebcb8b;&quot;&gt;Store&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt; store;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;TodosView&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;this&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.store, {&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Key&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;? key}) : &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;super&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(key: key);
+  
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;@override
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Widget &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;BuildContext&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; context) {
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#b48ead;&quot;&gt;final&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt; todos = store.todos;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;Center&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+      child: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ebcb8b;&quot;&gt;ListView&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;builder&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;      itemCount: todos.length,
+      itemBuilder: (_, index) =&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#ebcb8b;&quot;&gt;Text&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#a3be8c;&quot;&gt;&amp;#39;${&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#bf616a;&quot;&gt;todos[index].title&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#a3be8c;&quot;&gt;}&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#65737e30;color:#c0c5ce;&quot;&gt;),
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;    ));
+  }
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;👉   If you like to look at more detailed code samples head on over to the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thlorenz&#x2F;rid-examples&quot;&gt;rid-examples
+repository&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;get-involved&quot;&gt;Get Involved&lt;&#x2F;h2&gt;
+&lt;p&gt;Please &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;sponsors&#x2F;thlorenz&quot;&gt;sponsor &lt;em&gt;Rid&lt;&#x2F;em&gt; development&lt;&#x2F;a&gt; so it can evolve and stay maintained. &lt;&#x2F;p&gt;
+&lt;h2 id=&quot;contributing&quot;&gt;Contributing&lt;&#x2F;h2&gt;
+&lt;p&gt;Find out how to contribute to &lt;em&gt;Rid&lt;&#x2F;em&gt;. &lt;a href=&quot;..&#x2F;..&#x2F;contributing&#x2F;how-to-contribute&#x2F;&quot;&gt;Contributing →&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+</content>
+	</entry>
+</feed>

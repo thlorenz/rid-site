@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" as="font" href="https://thlorenz.com/rid-site/fonts/vendor/jost/jost-v4-latin-regular.woff2" type="font/woff2" crossorigin>
+  <link rel="preload" as="font" href="https://thlorenz.com/rid-site/fonts/vendor/jost/jost-v4-latin-700.woff2"  type="font/woff2" crossorigin>
+
+
+<link rel="stylesheet" href="https://thlorenz.com/rid-site/main.css">
+
+
+
+  
+  
+  
+  
+  
+    
+  
+
+  
+  
+    
+    
+  
+  
+  
+    
+  
+  
+  
+  
+    
+  
+  
+  
+
+
+  <meta name="robots" content="index, follow">
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+
+
+	
+
+
+	
+
+<title>Rid WASM Support Opus 1 | Rid</title>
+<meta name="description" content="Detailing my explorations into adding WASM support to Rid">
+<link rel="canonical" href="https://thlorenz.com/rid-site/blog/wasm-support/">
+
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="rid-card.png">
+  <meta name="twitter:title" content="Rid WASM Support Opus 1">
+  <meta name="twitter:description" content="Detailing my explorations into adding WASM support to Rid">
+  <meta name="twitter:site" content="@thlorenz">
+  <meta name="twitter:creator" content="@thlorenz">
+  
+  <meta property="og:title" content="Rid WASM Support Opus 1">
+  <meta property="og:description" content="Detailing my explorations into adding WASM support to Rid">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://thlorenz.com/rid-site/blog/wasm-support/">
+
+  
+    <meta property="og:image" content="rid-card.png">
+  
+
+  <meta property="og:updated_time" content="2021-08-04">
+  <meta property="og:site_name" content="Rid WASM Support Opus 1">
+
+  
+
+  
+
+  
+  <meta property="article:author" content="https://www.twitter.com/Thorsten Lorenz">
+  <meta property="og:locale" content="en_US">
+
+
+
+
+
+  
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "/blog/wasm-support/"
+      },
+      "headline": "Rid WASM Support Opus 1",
+      "image": ,
+      "datePublished": "2021-08-04",
+      "dateModified": "2021-08-04",
+      "author": {
+        "@type": "Organization",
+        "name": "Rid WASM Support Opus 1"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Rid WASM Support Opus 1",
+        
+        "logo": {
+          "@type": "ImageObject",
+          "url": "/logo-rid.png"
+        }
+        
+      },
+      "description": "Detailing my explorations into adding WASM support to Rid"
+    }
+    </script>
+  
+
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "BreadcrumbList",
+    
+      
+      
+        
+        
+        
+        
+        
+        
+        
+        
+          {
+            "@type": "ListItem",
+            "position":  1 ,
+            "name": "Home",
+            "item": "https://thlorenz.com/rid-site/"
+          },
+          
+          
+          {
+            "@type": "ListItem",
+            "position":  2 ,
+            "name": "Blog",
+            "item": "https://thlorenz.com/rid-site/blog/"
+          },
+        
+      
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+          
+          
+          {
+            "@type": "ListItem",
+            "position":  3 ,
+            "name": "Wasm Support",
+            "item": "https://thlorenz.com/rid-site/blog/wasm-support/"
+          },
+        
+      
+    
+  }
+</script>
+
+
+
+
+
+  <meta name="theme-color" content="#fff">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://thlorenz.com/rid-site/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://thlorenz.com/rid-site/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://thlorenz.com/rid-site/favicon-16x16.png">
+  
+
+
+  
+
+</head>
+
+  
+
+<body class="blog single">
+  
+  
+<div class="header-bar fixed-top"></div>
+<header class="navbar fixed-top navbar-expand-md navbar-light">
+	<div class="container">
+		<input class="menu-btn order-0" type="checkbox" id="menu-btn">
+		<label class="menu-icon d-md-none" for="menu-btn"><span class="navicon"></span></label>
+		<a class="navbar-brand order-1 order-md-0 me-auto" href="https://thlorenz.com/rid-site">Rid</a>
+		<button id="mode" class="btn btn-link order-2 order-md-4" type="button" aria-label="Toggle mode">
+			<span class="toggle-dark"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
+			<span class="toggle-light"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></span>
+		</button>
+		<ul class="navbar-nav fork-me order-3 order-md-5">
+			
+				
+					<li class="nav-item">
+						<a class="nav-link" href="https://twitter.com/thlorenz"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-twitter"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg><span class="ms-2 visually-hidden">Twitter</span></a>
+					</li>
+				
+					<li class="nav-item">
+						<a class="nav-link" href="https://github.com/thlorenz/rid-examples"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg><span class="ms-2 visually-hidden">GitHub</span></a>
+					</li>
+				
+			
+		</ul>
+		<div class="collapse navbar-collapse order-4 order-md-1">
+			<ul class="navbar-nav main-nav me-auto order-5 order-md-2">
+				
+					
+						<li class="nav-item">
+							<a class="nav-link" href="https://thlorenz.com/rid-site/docs/getting-started/introduction/">Docs</a>
+						</li>
+					
+						<li class="nav-item blog active">
+							<a class="nav-link" href="https://thlorenz.com/rid-site/blog/">Blog</a>
+						</li>
+					
+				
+        <li class="btn btn-link order-2 order-md-4" aria-label="Sponsor @thlorenz on GitHub">
+          <a class="github-button" href="https://github.com/sponsors/thlorenz" data-icon="octicon-heart" aria-label="Sponsor @thlorenz on GitHub">Sponsor</a>
+        </li>
+			</ul>
+			<div class="break order-6 d-md-none"></div>
+			
+				<form class="navbar-form flex-grow-1 order-7 order-md-3">
+					<input id="userinput" class="form-control is-search" type="search" placeholder="Search docs..."
+						aria-label="Search docs..." autocomplete="off">
+					<div id="suggestions" class="shadow bg-white rounded"></div>
+				</form>
+			
+		</div>
+	</div>
+</header>
+
+
+
+  
+<div class="wrap container" role="document">
+  <div class="content">
+    <div class="row justify-content-center">
+      <div class="col-md-12 col-lg-10 col-xl-8">
+        <article>
+          <div class="blog-header">
+            <h1>Rid WASM Support Opus 1</h1>
+            
+<p><small>Posted August  4, 2021 by <a class="stretched-link position-relative" href="https://thlorenz.com/rid-site/authors/thorsten-lorenz/">Thorsten Lorenz</a>&nbsp;&hyphen;&nbsp;<strong>9&nbsp;min read</strong></small><p>
+
+          </div>
+          <p class="lead">Exploring WASM support for Rid to build <b>Flutter/Dart</b> apps with <b>Rust</b> app logic running in the browser</p>
+          <p>When I demonstrated the initial Rid version I immediately got <a href="https://www.reddit.com/r/rust/comments/ncc9vc/rid_integrate_rust_into_your_dart_or_flutter_app/gy4peh2?utm_source=share&amp;utm_medium=web2x&amp;context=3">requests to add WASM
+support</a> so apps built with it can run in the browser as well.
+At this point I figured it would be as simple as adding another FFI shim, but this turned out
+to not be entirely true.</p>
+<p>As always I drove my explorations via an example, a Todo app using bloc/cubit with all logic
+implemented in Rust. Feel free to click below, it's not a screenshot, but a fully functioning
+app minus the feature requiring threading (more about that below).</p>
+<div style="text-align: center; width=200px;">
+<h4 style="display: inline;">Flutter app is loading ...</h4>
+<iframe style="margin-top: -40px; margin-left: auto; margin-right: auto; " src="https://thlorenz.com/rid-examples/todo_cubit/" width="400px" height="400px"></iframe>
+</div>
+<p><em>Yes it's an interactive embedded Flutter app built with Rid, just click around</em></p>
+<p>You can also try the <a href="https://thlorenz.com/rid-examples/todo_cubit">standalone version</a></p>
+<h2 id="standing-on-the-shoulders">Standing On the Shoulders ...</h2>
+<p>Lots of projects stand on the shoulders of giants. This is true for Rid as well as it wouldn't
+be possible or at the very least a lot harder without libraries like
+<a href="https://crates.io/crates/syn">syn</a> and <a href="https://pub.dev/packages/ffigen">ffigen</a> just to name
+a few.</p>
+<p>Compiling Rust code to WASM was the easy part. The giants are pretty much built into the
+Rust compiler and tools to optimize the results for size and/or speed are available as
+<a href="https://rustwasm.github.io/docs/book/game-of-life/code-size.html">explained in this chapter</a>
+of the <a href="https://rustwasm.github.io/docs/book/introduction.html"><em>Rust and WebAssembly</em> book</a>.</p>
+<p>However when it comes to loading and interacting with WASM from Dart there aren't that many shoulders
+to stand on yet. There is the <a href="https://github.com/dart-lang/wasm">dart-lang/wasm</a> library, but
+if you read the fine print closely</p>
+<blockquote>
+<p>Built on top of the Wasmer runtime</p>
+</blockquote>
+<p>you'll realize that it loads that runtime as a binary.
+Obviously that doesn't work when running in the browser and being able to run in the browser is
+why we want to add WASM support to Rid in the first place.</p>
+<p>After spending too much time catching on to that 😜 I found
+<a href="https://github.com/lexaknyazev/wasm.dart/tree/main/wasm_interop">wasm_interop</a>. This module
+uses browser APIs in order to load and interact with WASM modules. Just what I needed.</p>
+<p>Well almost, the gluecode that <a href="https://pub.dev/packages/ffigen">ffigen</a> generates won't work
+for WASM because it depends on libraries that aren't available when building Dart for the Web.
+For a moment I thought <a href="https://github.com/EPNW/web_ffi">web_ffi</a> would help me here until I
+read</p>
+<blockquote>
+<p>Currently, only WebAssembly compiled with emscripten is usable</p>
+</blockquote>
+<p>At that point I realized that Eric Seidel was right on the 💰 when he responded to my tweet
+in which I presented a small working example of a Dart + WASM web app.</p>
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Agreed! CC <a href="https://twitter.com/MiSvTh?ref_src=twsrc%5Etfw">@MiSvTh</a></p>&mdash; kevmoo (@kevmoo) <a href="https://twitter.com/kevmoo/status/1410439603010490374?ref_src=twsrc%5Etfw">July 1, 2021</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<h2 id="the-missing-pieces">The Missing Pieces</h2>
+<p>I decided to build the missing pieces myself, one of which would be a library like <em>ffigen</em>
+except that it generates code to interface with
+<a href="https://github.com/lexaknyazev/wasm.dart/tree/main/wasm_interop">wasm_interop</a>. I called it
+<a href="https://github.com/thlorenz/wasmjsgen"><em>wasmjsgen</em></a>.</p>
+<p>One feature of this library is that the code that consumes those <em>ffi</em> calls
+does not have change when interfacing with WASM vs. <em>Native</em> bindings. Therefore all function
+signatures have to match and types need to at least have the same name. <a href="https://medium.com/@dvargahali/dart-2-conditional-imports-update-16147a776aa8">Conditional
+imports</a> can
+then be used to import the correct <em>ffi</em> bindings. In short <strong>the <em>wasmjsgen</em> API matches the
+<em>ffigen</em> API exactly</strong> down to <a href="https://github.com/thlorenz/rid-examples/blob/master/flutter/todo_cubit_wasm/plugin/lib/generated/ffigen_binding.dart#L943-L953">mimicking <code>Pointer</code> types</a>
+so that the wrapper code generated by Rid can be used across platforms.</p>
+<blockquote>
+<p>If you're wondering why this library doesn't wrap <em>ffigen</em> to change behavior via
+composition or inheritance please have a look at my failed attempts of <a href="https://github.com/thlorenz/wasmjs_extend_ffigen">extending
+ffigen</a> as well as
+<a href="https://github.com/thlorenz/wasmjsgen_wrap_ffigen">wrapping it</a>. 
+The fact that the data types storing parse results include the code generation methods directly
+made it impossible to get in the middle and change it to generate WASM bindings instead. At
+some point I gave up on the <em>correct</em> way of doing this and basically copy/pasted the library to
+modify code generation directly.</p>
+</blockquote>
+<p>Once I had <a href="https://github.com/thlorenz/wasmjsgen">wasmjsgen</a> in place I was able to create the
+glue code for the WASM version of the <a href="http://todo">todo cubit</a> example and only had to modify
+the Rid wrapper code slightly to have the example app running in the browser with practically
+no change to existing app code.</p>
+<p>The config of wasmjsgen is identicical to ffigen's except for the <em>allocate</em> function that is
+necessary to send <em>Strings</em> to Rust and optionally <em>dealloate</em> and <em>reallocate</em> functions.</p>
+<p>These <em>allocation</em> functions needs to be implemented in Rust similarly to the <a href="https://github.com/thlorenz/rid-examples/blob/master/flutter/todo_cubit_wasm/src/alloc.rs">implementation
+included with the example</a></p>
+<div class="card" style="background: white;">
+<iframe src="https://github.com/sponsors/thlorenz/card" title="Sponsor thlorenz" height="225" width="600" style="border: 0;"></iframe>
+</div>
+<h2 id="challenges">Challenges</h2>
+<p>Some surprises awaited though when I tried to use all features of the application. </p>
+<h3 id="no-reply-channel-with-wasm">No Reply Channel with WASM</h3>
+<p>First off, the <a href="https://crates.io/crates/allo-isolate">allo_isolate</a> crate which Rid uses to
+relay messages from Rust to Dart does not work with WASM. I worked around this by using a
+polling implementation instead, i.e. the Dart end frequently queries the Rust end for any
+replies to messages it should to process. </p>
+<p>For now I created a custom reply channel implementation which <a href="https://github.com/thlorenz/rid-examples/blob/master/flutter/todo_cubit_wasm/plugin/lib/wasm/reply_channel.dart#L29-L44">uses a
+timer</a>
+on the Dart side. </p>
+<p>On the Rust side I used a simple data structure to queue up and expose replies. It's using a
+<code>Vec</code> for simplicity since order doesn't matter in this simple case. The code would be improved
+and generated by Rid of course. For now I <a href="https://github.com/thlorenz/rid-examples/blob/master/flutter/todo_cubit_wasm/src/replies.rs">added it to the
+example</a>.</p>
+<h3 id="no-threads-out-of-the-box">No Threads out of the Box</h3>
+<p>When testing the Todo expiry feature the app crashed when attempting to create a thread on the
+Rust end since this is not supported when running WASM. Fortunately in this case the error
+message <code>&quot;failed to spawn thread&quot;</code> made it very easy to confirm the origin of the problem.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#65737e;">// std/src/thread/mod.rs
+</span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">spawn</span><span style="color:#c0c5ce;">&lt;F, T&gt;(</span><span style="color:#bf616a;">f</span><span style="color:#c0c5ce;">: F) -&gt; JoinHandle&lt;T&gt;
+</span><span style="color:#b48ead;">where
+</span><span style="color:#c0c5ce;">    F: FnOnce() -&gt; T,
+    F: Send + </span><span style="color:#b48ead;">&#39;static</span><span style="color:#c0c5ce;">,
+    T: Send + </span><span style="color:#b48ead;">&#39;static</span><span style="color:#c0c5ce;">,
+{
+    Builder::new().</span><span style="color:#96b5b4;">spawn</span><span style="color:#c0c5ce;">(f).</span><span style="color:#96b5b4;">expect</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">failed to spawn thread</span><span style="color:#c0c5ce;">&quot;)
+}
+</span></code></pre>
+<p>After reading <a href="https://rustwasm.github.io/2018/10/24/multithreading-rust-and-wasm.html">this very informative
+post</a> about the state
+of multi-threading in rust-compiled WASM, I realized that while possible, making this work would
+require a considerable amount effort at this point. However there are lots of other features
+I'd like to add to Rid. I hope that  when I revisit this task the
+<a href="https://github.com/w3reality/wasm-mt">wasm-mt</a> or similar libraries have paved the way to make
+this easier.</p>
+<p>For now I removed todo expiry from the WASM version of the sample app.</p>
+<h3 id="issues-sending-structs">Issues sending Structs</h3>
+<p>The Todo example app allows users to select a filter to show <em>All</em>, <em>Completed</em> or <em>Pending</em>
+Todos. After the filter is updated the Dart end invokes the below Rust method in order to get
+the Todos that match it.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">rid</span><span style="color:#c0c5ce;">::</span><span style="color:#bf616a;">export</span><span style="color:#c0c5ce;">]
+#[</span><span style="color:#bf616a;">rid</span><span style="color:#c0c5ce;">::</span><span style="color:#bf616a;">structs</span><span style="color:#c0c5ce;">(Todo)]
+</span><span style="color:#b48ead;">impl </span><span style="color:#c0c5ce;">Store {
+    #[</span><span style="color:#bf616a;">rid</span><span style="color:#c0c5ce;">::</span><span style="color:#bf616a;">export</span><span style="color:#c0c5ce;">]
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">filtered_todos</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">) -&gt; Vec&lt;&amp;Todo&gt; {
+        </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> vec: Vec&lt;&amp;Todo&gt; = </span><span style="color:#b48ead;">match </span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.filter {
+            Filter::Completed =&gt; </span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.todos.</span><span style="color:#96b5b4;">iter</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">filter</span><span style="color:#c0c5ce;">(|</span><span style="color:#bf616a;">x</span><span style="color:#c0c5ce;">| x.completed).</span><span style="color:#96b5b4;">collect</span><span style="color:#c0c5ce;">(),
+            Filter::Pending =&gt; </span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.todos.</span><span style="color:#96b5b4;">iter</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">filter</span><span style="color:#c0c5ce;">(|</span><span style="color:#bf616a;">x</span><span style="color:#c0c5ce;">| !x.completed).</span><span style="color:#96b5b4;">collect</span><span style="color:#c0c5ce;">(),
+            Filter::All =&gt; </span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.todos.</span><span style="color:#96b5b4;">iter</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">collect</span><span style="color:#c0c5ce;">(),
+        };
+        vec.</span><span style="color:#96b5b4;">sort</span><span style="color:#c0c5ce;">();
+        vec
+    }
+}
+</span></code></pre>
+<p>The returned <code>Vec</code> is actually wrapped in a struct that includes <code>length</code> and <code>capacity</code>
+information as well as a pointer to the first item. It also includes a method to <code>free</code> it when
+the Dart end processed it.</p>
+<p>It turns out returning such a struct when using WASM is not trivial if even possible at all. At
+the very least, I could not get it to work at all and the error messages aren't very helpful.
+It actually made me wonder if WASM provides any other error message than the below. 😎</p>
+<blockquote>
+<p><code>RuntimeError: unreachable</code></p>
+</blockquote>
+<p>I spent way too much time trying to make this work and tried returning other struct types as
+well without any success, but at least I learned a bunch about compiling Dart apps with
+<a href="https://dart.dev/tools/dart2js">dart2js</a> and how debugging a Dart Web app compares to
+debugging a Flutter app running in Chrome.</p>
+<p>In the end I decided to work around this issue by wrapping the above method in one that returns a
+JSON string containing the filtered Todos that it then deserializes on the Dart end.</p>
+<p>To that end I used <a href="https://crates.io/crates/serde">serde</a> to make the Todo struct serializable
+and <a href="https://crates.io/crates/serde_json">serde_json</a> to output JSON.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">rid</span><span style="color:#c0c5ce;">::</span><span style="color:#bf616a;">export</span><span style="color:#c0c5ce;">]
+</span><span style="color:#b48ead;">impl </span><span style="color:#c0c5ce;">Store {
+    #[</span><span style="color:#bf616a;">rid</span><span style="color:#c0c5ce;">::</span><span style="color:#bf616a;">export</span><span style="color:#c0c5ce;">]
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">filtered_todos_string</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">) -&gt; String {
+        serde_json::to_string(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.</span><span style="color:#96b5b4;">filtered_todos</span><span style="color:#c0c5ce;">()).</span><span style="color:#96b5b4;">expect</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">Unable JSON stringify filtred todos</span><span style="color:#c0c5ce;">&quot;)
+    }
+}
+</span></code></pre><h1 id="in-closing">In Closing</h1>
+<p>Exploring WASM support surfaced a few things:</p>
+<ol>
+<li>Using Rid to build Flutter apps running in the browser will definitely be possible eventually</li>
+<li>The ecosystem to do so is missing a lot of pieces, especially on the Dart side</li>
+<li>Many of the limitations I encountered will be overcome when the ecosystem around WASM
+evolves</li>
+<li>All other limitations can be worked around at possible performance cost, i.e.
+serialize/deserialize Data Structures</li>
+</ol>
+<p>Therefore it is a bit too early to properly add this feature to Rid and more efficient to focus on
+other features that need to be added. In the meantime the ecosystem around WASM support will
+evolve and I will try to help where I can.</p>
+<p>👉 If you liked this post and want to help me evolve Rid, please consider <a href="../../docs/contributing/sponsor">becoming a sponsor</a></p>
+
+        </article>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  
+    
+<footer class="footer text-muted">
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-8 order-last order-lg-first">
+				<ul class="list-inline">
+					
+						<li class="list-inline-item">Powered by <a href="https://www.getzola.org/">Zola</a>, and <a href="https://github.com/aaranxu/adidoks">AdiDoks</a></li>
+					
+				</ul>
+			</div>
+			<div class="col-lg-8 order-first order-lg-last text-lg-end">
+				<ul class="list-inline">
+					
+						
+							<li class="list-inline-item"><a href="https://thlorenz.com/rid-site/docs/contributing/sponsor/">Sponsor</a></li>
+						
+							<li class="list-inline-item"><a href="https://thlorenz.com/rid-site/privacy-policy/">Privacy</a></li>
+						
+							<li class="list-inline-item"><a href="https://thlorenz.com/rid-site/docs/contributing/code-of-conduct/">Code of Conduct</a></li>
+						
+					
+				</ul>
+			</div>
+		</div>
+	</div>
+</footer>
+
+  
+
+  
+<script src="https://thlorenz.com/rid-site/js/main.js" defer></script>
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  <script src="https://thlorenz.com/rid-site/plugins/elasticlunr.min.js" defer></script>
+  <script src="https://thlorenz.com/rid-site/search_index.en.js" defer></script>
+  <script src="https://thlorenz.com/rid-site/js/search.js" defer></script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6N055MM49B"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-6N055MM49B');
+</script>
+
+  
+</body>
+</html>
